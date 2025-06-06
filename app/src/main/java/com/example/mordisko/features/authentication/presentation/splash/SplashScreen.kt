@@ -1,5 +1,6 @@
 package com.example.mordisko.features.authentication.presentation.splash
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,8 +31,14 @@ fun SplashScreen(
 
     LaunchedEffect(navigationState) {
         when (navigationState) {
-            is SplashNavigation.Login -> onNavigateToLogin()
-            is SplashNavigation.Home -> onNavigateToHome()
+            is SplashNavigation.Login -> {
+                Log.d("SplashScreen", "Navegando a Login")
+                onNavigateToLogin()
+            }
+            is SplashNavigation.Home -> {
+                Log.d("SplashScreen", "Navegando a Home")
+                onNavigateToHome()
+            }
             else -> {}
         }
     }

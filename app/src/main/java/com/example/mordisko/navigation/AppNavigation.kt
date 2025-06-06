@@ -85,7 +85,7 @@ fun AppNavigation(
         composable("home") {
             HomeScreen(
                 onCategorySelected = { category ->
-                    navController.navigate("menu/$category") // ✅ esta ruta ahora existirá
+                    navController.navigate("menu/$category")
                 },
                 onLogout = {
                     navController.navigate("login") {
@@ -95,9 +95,8 @@ fun AppNavigation(
             )
         }
 
-        // ✅ AÑADIDO AL FINAL
-        menuNavGraph(navController)
+        // ✅ Menu y detalle de pizza (importante usar this)
+        this.menuNavGraph(navController)
     }
 }
-
 

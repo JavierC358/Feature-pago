@@ -22,11 +22,23 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             delay(3000) // tiempo de espera en splash
             val currentUser = firebaseAuth.currentUser
-            _navigationState.value = if (currentUser != null) {
-                SplashNavigation.Home
+            if (currentUser != null) {
+                try {
+                    currentUser.reload().addOnCompleteListener { task ->
+                        if (task.isSuccessful && firebaseAuth.currentUser != null) {
+                            _navigationState.value = SplashNavigation.Home
+                        } else {
+                            firebaseAuth.signOut()
+                            _navigationState.value = SplashNavigation.Login
+                        }
+                    }
+                } catch (e: Exception) {
+                    firebaseAuth.signOut()
+                    _navigationState.value = SplashNavigation.Login
+                }
             } else {
-                SplashNavigation.Login
+                _navigationState.value = SplashNavigation.Login
             }
         }
     }
-    }
+}

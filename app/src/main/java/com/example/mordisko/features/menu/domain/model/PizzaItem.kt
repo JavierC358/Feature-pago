@@ -5,5 +5,6 @@ import androidx.annotation.DrawableRes
 data class PizzaItem(
     val name: String,
     val description: String,
-    @DrawableRes val imageRes: Int
+    @DrawableRes val imageRes: Int,
+    val category: PizzaItemCategory // 👈 nuevo campo
 )
