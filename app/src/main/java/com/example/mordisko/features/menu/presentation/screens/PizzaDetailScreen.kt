@@ -26,9 +26,8 @@ fun PizzaDetailScreen(
     pizza: PizzaItem,
     onBack: () -> Unit
 ) {
-    LaunchedEffect(Unit) {
-        Log.d("PizzaDetailScreen", "Mostrando detalles de: ${pizza.name}")
-    }
+    val textColor = Color(0xFFE05B13)
+    val bolivaresPrice = pizza.priceUsd * 36.5 // Ejemplo de tasa de conversión
 
     var selectedSize by remember { mutableStateOf("Med") }
     var quantity by remember { mutableStateOf(1) }
@@ -57,18 +56,18 @@ fun PizzaDetailScreen(
             // 🔙 Botón VOLVER
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .align(Alignment.Start)
+                modifier = Modifier.align(Alignment.Start)
             ) {
                 IconButton(onClick = { onBack() }) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = textColor)
                 }
                 Text(
                     text = "Volver",
                     modifier = Modifier
                         .clickable { onBack() }
                         .padding(start = 4.dp),
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
+                    color = textColor
                 )
             }
 
@@ -83,14 +82,37 @@ fun PizzaDetailScreen(
                     .height(180.dp)
             )
 
+            // 💵 Precio en dólares
             Spacer(modifier = Modifier.height(8.dp))
-            Text(text = pizza.name, style = MaterialTheme.typography.titleLarge)
-            Text(text = pizza.description, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = "$${pizza.priceUsd}",
+                color = textColor,
+                style = MaterialTheme.typography.titleLarge
+            )
+
+            // 🪙 Precio en bolívares
+            Text(
+                text = "Bs ${"%,.2f".format(bolivaresPrice)}",
+                color = Color.Gray,
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = pizza.name,
+                style = MaterialTheme.typography.titleLarge,
+                color = textColor
+            )
+            Text(
+                text = pizza.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = textColor
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             if (showSizes) {
-                Text("Tamaño:", style = MaterialTheme.typography.titleMedium)
+                Text("Tamaño:", style = MaterialTheme.typography.titleMedium, color = textColor)
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier.fillMaxWidth()
@@ -105,10 +127,11 @@ fun PizzaDetailScreen(
                                     onClick = { selectedSize = size }
                                 )
                                 .background(
-                                    if (size == selectedSize) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                                    if (size == selectedSize) textColor.copy(alpha = 0.2f)
                                     else Color.Transparent
                                 )
-                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            color = textColor
                         )
                     }
                 }
@@ -116,7 +139,7 @@ fun PizzaDetailScreen(
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // 🛒 Cantidad con carrito en el centro
+            // 🛒 Controles de cantidad con carrito
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -127,7 +150,7 @@ fun PizzaDetailScreen(
                 IconButton(onClick = {
                     if (quantity > 1) quantity--
                 }) {
-                    Icon(Icons.Default.Remove, contentDescription = "Restar")
+                    Icon(Icons.Default.Remove, contentDescription = "Restar", tint = textColor)
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -138,6 +161,7 @@ fun PizzaDetailScreen(
                     Icon(
                         imageVector = Icons.Default.ShoppingCart,
                         contentDescription = "Agregar al carrito",
+                        tint = textColor,
                         modifier = Modifier.size(36.dp)
                     )
                 }
@@ -145,13 +169,17 @@ fun PizzaDetailScreen(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 IconButton(onClick = { quantity++ }) {
-                    Icon(Icons.Default.Add, contentDescription = "Sumar")
+                    Icon(Icons.Default.Add, contentDescription = "Sumar", tint = textColor)
                 }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(text = "Cantidad: $quantity", style = MaterialTheme.typography.titleLarge)
+            Text(
+                text = "Cantidad: $quantity",
+                style = MaterialTheme.typography.titleLarge,
+                color = textColor
+            )
         }
     }
 }

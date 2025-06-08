@@ -9,7 +9,7 @@ data class PizzaCategory(
 )
 
 val pizzaCategories = listOf(
-    PizzaCategory("Pizzas", R.drawable.ic_burger_background),
+    PizzaCategory("Pizzas", R.drawable.ic_pizzahome_background),
     PizzaCategory("Calzone", R.drawable.ic_calzone_background),
     PizzaCategory("Dedos de Queso", R.drawable.ic_dedos_queso_background),
     PizzaCategory("Rolls de Pizzas", R.drawable.ic_rolls_background),
