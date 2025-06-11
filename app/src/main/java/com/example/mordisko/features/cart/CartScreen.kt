@@ -90,7 +90,7 @@ fun CartScreen(
                                 .background(Color.LightGray)
                         )
 
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
 
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
