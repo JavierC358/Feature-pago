@@ -8,35 +8,36 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.lifecycle.viewmodel.compose.viewModel // 👈 Import necesario
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
+import com.example.mordisko.features.cart.presentation.CartViewModel
 import com.example.mordisko.features.menu.domain.model.getPizzaItemsForCategory
 import com.example.mordisko.features.menu.presentation.screens.MenuPizzasScreen
 import com.example.mordisko.features.menu.presentation.screens.PizzaDetailScreen
 import com.example.mordisko.features.menu.presentation.viewmodel.MenuViewModel
 
-fun NavGraphBuilder.menuNavGraph(navController: NavHostController) {
-
-    // 🧩 Listado de pizzas por categoría
+fun NavGraphBuilder.menuNavGraph(
+    navController: NavHostController,
+    cartViewModel: CartViewModel
+) {
     composable("menu/{category}") { backStackEntry ->
         val category = backStackEntry.arguments?.getString("category") ?: ""
         val pizzas = getPizzaItemsForCategory(category)
-
-        val viewModel: MenuViewModel = viewModel() // 👈 ViewModel compartido a nivel Activity
+        val viewModel: MenuViewModel = hiltViewModel()
 
         MenuPizzasScreen(
             navController = navController,
             category = category,
-            pizzas = pizzas
+            pizzas = pizzas,
+            cartViewModel = cartViewModel
         )
     }
 
-    // 🍕 Detalle de la pizza seleccionada
     composable("pizza_detail") {
-        val viewModel: MenuViewModel = viewModel() // 👈 Mismo ViewModel compartido
-        val selectedPizza by viewModel.selectedPizza.collectAsState()
+        val viewModel: MenuViewModel = hiltViewModel()
+        val selectedPizza = viewModel.selectedPizza.collectAsState().value
 
         selectedPizza?.let { pizza ->
             PizzaDetailScreen(
@@ -44,17 +45,18 @@ fun NavGraphBuilder.menuNavGraph(navController: NavHostController) {
                 onBack = {
                     viewModel.clearSelectedPizza()
                     navController.popBackStack()
-                }
+                },
+                navController = navController,
+                cartViewModel = cartViewModel // ✅ ViewModel compartido
             )
         } ?: run {
-            // 🔴 Mensaje de depuración si no hay pizza seleccionada
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.White),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = "❌ No hay pizza seleccionada", color = Color.Red)
+                Text("❌ No hay pizza seleccionada", color = Color.Red)
             }
         }
     }

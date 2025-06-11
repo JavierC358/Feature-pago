@@ -29,14 +29,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.example.mordisko.features.cart.presentation.CartViewModel
 import com.example.mordisko.features.menu.domain.model.PizzaItem
 import com.example.mordisko.features.menu.presentation.viewmodel.MenuViewModel
+import com.example.mordisko.features.menu.presentation.screens.PizzaDetailScreen
 
 @Composable
 fun MenuPizzasScreen(
     navController: NavController,
     category: String,
-    pizzas: List<PizzaItem>
+    pizzas: List<PizzaItem>,
+    cartViewModel: CartViewModel
 ) {
     val viewModel: MenuViewModel = hiltViewModel()
     val selectedPizza by viewModel.selectedPizza.collectAsState()
@@ -48,7 +51,9 @@ fun MenuPizzasScreen(
             pizza = selectedPizza!!,
             onBack = {
                 viewModel.clearSelectedPizza()
-            }
+            },
+            navController = navController, // ✅ Solución aplicada aquí
+                    cartViewModel = cartViewModel
         )
         return
     }

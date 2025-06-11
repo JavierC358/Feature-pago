@@ -89,6 +89,8 @@ dependencies {
 
     implementation(libs.hilt.android)
     implementation("androidx.navigation:navigation-compose:2.7.7")
+    implementation(libs.androidx.media3.common.ktx)
+    implementation(libs.firebase.crashlytics.buildtools)
     kapt(libs.hilt.compiler)
 
     //implementation("androidx.compose.material3:material3-icons-extended:1.2.1")

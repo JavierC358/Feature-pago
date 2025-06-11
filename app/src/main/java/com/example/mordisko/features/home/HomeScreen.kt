@@ -45,30 +45,21 @@ fun HomeScreen(
             modifier = Modifier.padding(16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(8.dp)) // reducido
 
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp), // reducido
+            horizontalArrangement = Arrangement.spacedBy(8.dp), // reducido
             modifier = Modifier
-                .padding(8.dp)
+                .padding(4.dp) // reducido
                 .weight(1f)
         ) {
             items(pizzaCategories) { category ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    PizzaCategoryCard(
-                        category = category,
-                        onClick = { onCategorySelected(category.name) }
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = category.name,
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp
-                    )
-                }
+                PizzaCategoryCard(
+                    category = category,
+                    onClick = { onCategorySelected(category.name) }
+                )
             }
         }
 
@@ -91,6 +82,8 @@ fun HomeScreen(
 
 @Composable
 fun PizzaCategoryCard(category: PizzaCategory, onClick: () -> Unit) {
+    val orange = Color(0xFFE05B13)
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -99,11 +92,36 @@ fun PizzaCategoryCard(category: PizzaCategory, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Image(
-            painter = painterResource(id = category.imageRes),
-            contentDescription = category.name,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.SpaceBetween,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = category.imageRes),
+                    contentDescription = category.name,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier
+                        .fillMaxWidth(0.8f)
+                        .fillMaxHeight(0.8f)
+                )
+            }
+
+            // Nombre de la categoría en la parte inferior
+            Text(
+                text = category.name,
+                color = orange,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                modifier = Modifier
+                    .padding(bottom = 6.dp)
+            )
+        }
     }
 }

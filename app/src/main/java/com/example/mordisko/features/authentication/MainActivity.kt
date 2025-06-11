@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.navigation.compose.rememberNavController
 import com.example.mordisko.features.authentication.presentation.google.GoogleAuthViewModel
+import com.example.mordisko.features.cart.presentation.CartViewModel
 import com.example.mordisko.navigation.AppNavigation
 import com.example.mordisko.ui.theme.MordiskoTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,6 +19,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val googleAuthViewModel: GoogleAuthViewModel by viewModels()
+    private val cartViewModel: CartViewModel by viewModels() // ✅ ViewModel compartido
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,7 +27,6 @@ class MainActivity : ComponentActivity() {
         val googleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val data: Intent? = result.data
             if (data != null) {
-                // Aquí sí se hace el login
                 googleAuthViewModel.handleGoogleSignInResult(data, this)
             } else {
                 googleAuthViewModel.setError("No se recibió respuesta del intento de inicio con Google.")
@@ -39,7 +40,8 @@ class MainActivity : ComponentActivity() {
                     AppNavigation(
                         navController = navController,
                         googleLauncher = googleLauncher,
-                        googleAuthViewModel = googleAuthViewModel
+                        googleAuthViewModel = googleAuthViewModel,
+                        cartViewModel = cartViewModel // ✅ ViewModel compartido en navegación
                     )
                 }
             }

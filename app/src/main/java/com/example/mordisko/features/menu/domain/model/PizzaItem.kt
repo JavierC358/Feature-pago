@@ -6,7 +6,7 @@ data class PizzaItem(
     val name: String,
     val description: String,
     @DrawableRes val imageRes: Int,
-    val category: PizzaItemCategory, // 👈 nuevo campo
-    val priceUsd: Double
-
+    val category: PizzaItemCategory,
+    val priceBySize: Map<String, Double>? = null, // ✅ precios por tamaño (opcional)
+    val priceUsd: Double? = null // ✅ precio fijo para otras categorías (opcional)
 )

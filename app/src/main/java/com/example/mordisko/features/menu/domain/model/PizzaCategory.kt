@@ -13,7 +13,7 @@ val pizzaCategories = listOf(
     PizzaCategory("Calzone", R.drawable.ic_calzone_background),
     PizzaCategory("Dedos de Queso", R.drawable.ic_dedos_queso_background),
     PizzaCategory("Rolls de Pizzas", R.drawable.ic_rolls_background),
-    PizzaCategory("Extras", R.drawable.ic_ingredientes_background),
-    PizzaCategory("Postres", R.drawable.ic_postre_background),
+    //PizzaCategory("Extras", R.drawable.ic_ingredientes_background),
+    PizzaCategory("Postres", R.drawable.ic_postres_background),
     PizzaCategory("Bebidas", R.drawable.ic_refrescos_background)
 )

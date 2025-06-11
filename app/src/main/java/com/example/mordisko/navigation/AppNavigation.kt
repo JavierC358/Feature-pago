@@ -10,15 +10,18 @@ import com.example.mordisko.features.authentication.presentation.google.GoogleAu
 import com.example.mordisko.features.authentication.presentation.login.ForgotPasswordScreen
 import com.example.mordisko.features.authentication.presentation.login.LoginScreen
 import com.example.mordisko.features.authentication.presentation.login.RegisterScreen
-import com.example.mordisko.features.home.HomeScreen
 import com.example.mordisko.features.authentication.presentation.splash.SplashScreen
-import com.example.mordisko.features.menu.navigation.menuNavGraph // ✅ AÑADIR ESTA IMPORTACIÓN
+import com.example.mordisko.features.cart.CartScreen
+import com.example.mordisko.features.cart.presentation.CartViewModel
+import com.example.mordisko.features.home.HomeScreen
+import com.example.mordisko.features.menu.navigation.menuNavGraph
 
 @Composable
 fun AppNavigation(
     navController: NavHostController,
     googleLauncher: ActivityResultLauncher<Intent>,
-    googleAuthViewModel: GoogleAuthViewModel
+    googleAuthViewModel: GoogleAuthViewModel,
+    cartViewModel: CartViewModel // ✅ Se recibe desde MainActivity
 ) {
     NavHost(
         navController = navController,
@@ -95,8 +98,17 @@ fun AppNavigation(
             )
         }
 
-        // ✅ Menu y detalle de pizza (importante usar this)
-        this.menuNavGraph(navController)
+        // Menu y detalle de pizza (pasando cartViewModel compartido)
+        this.menuNavGraph(navController, cartViewModel)
+
+        // CartScreen con la misma instancia compartida
+        composable("cart") {
+            CartScreen(
+                cartViewModel = cartViewModel,
+                onContinue = {
+                    // Acción para continuar con el pedido
+                }
+            )
+        }
     }
 }
-
