@@ -11,10 +11,11 @@ import com.example.mordisko.features.authentication.presentation.login.ForgotPas
 import com.example.mordisko.features.authentication.presentation.login.LoginScreen
 import com.example.mordisko.features.authentication.presentation.login.RegisterScreen
 import com.example.mordisko.features.authentication.presentation.splash.SplashScreen
-import com.example.mordisko.features.cart.CartScreen
+import com.example.mordisko.features.cart.presentation.CartScreen
 import com.example.mordisko.features.cart.presentation.CartViewModel
 import com.example.mordisko.features.home.HomeScreen
 import com.example.mordisko.features.menu.navigation.menuNavGraph
+
 
 @Composable
 fun AppNavigation(
@@ -105,8 +106,12 @@ fun AppNavigation(
         composable("cart") {
             CartScreen(
                 cartViewModel = cartViewModel,
+                navController = navController,
                 onContinue = {
                     // Acción para continuar con el pedido
+                },
+                onBack = {
+                    navController.popBackStack() // ⬅️ Acción de volver atrás
                 }
             )
         }

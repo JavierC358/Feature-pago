@@ -49,14 +49,6 @@ fun SplashScreen(
     Box(modifier = Modifier
         .padding(horizontal = 24.dp, vertical = 12.dp).fillMaxSize(), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = "¡Bienvenidos!",
-                fontSize = 50.sp,
-                color = Color(0xFFE05B13),
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.padding(start = 24.dp, top = 24.dp)
-            )
-
             Image(
                 painter = painterResource(id = R.drawable.ic_logo_background),
                 contentDescription = "",
