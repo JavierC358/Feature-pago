@@ -7,10 +7,10 @@ plugins {
     alias(libs.plugins.androidHilt) apply false
     alias(libs.plugins.googleServices) apply false
 
-    // Dager Hill Inyeccion de Dependencias
+}
 
-   // id("com.google.dagger.hilt.android" ) version "2.41" apply false
-
-
-
+buildscript {
+    dependencies {
+        classpath ("com.google.gms:google-services:4.3.15") // o superior
+    }
 }

@@ -78,14 +78,29 @@ dependencies {
 
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
 
+    //Firebase
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
-    //implementation("com.google.firebase:firebase-auth:22.3.1")
+
+    //Firestore
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Google maps
+    implementation ("com.google.android.gms:play-services-maps:18.2.0")
+    implementation ("com.google.maps.android:maps-compose:4.1.1")
+    implementation ("com.google.maps.android:maps-compose:4.1.1")
+    implementation ("com.google.android.gms:play-services-location:21.0.1")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // @OptIn(ExperimentalPermissionsApi::class)
+    implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
+
+    //Esto habilita el uso de await() con tareas de Google Play Services
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
     implementation(libs.hilt.android)
     implementation("androidx.navigation:navigation-compose:2.7.7")
@@ -93,7 +108,6 @@ dependencies {
     implementation(libs.firebase.crashlytics.buildtools)
     kapt(libs.hilt.compiler)
 
-    //implementation("androidx.compose.material3:material3-icons-extended:1.2.1")
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
 
     implementation(libs.androidx.activity.ktx)
