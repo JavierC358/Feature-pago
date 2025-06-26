@@ -1,13 +1,13 @@
 package com.example.mordisko.core.di
 
-import com.example.mordisko.features.authentication.login.data.repository.GoogleAuthRepositoryImpl
-import com.example.mordisko.features.authentication.login.data.repository.LogoutRepositoryImpl
-import com.example.mordisko.features.authentication.login.domain.repository.GoogleAuthRepository
-import com.example.mordisko.features.authentication.login.domain.repository.LogoutRepository
-import com.google.firebase.auth.FirebaseAuth
+import com.example.mordisko.features.user.authentication.login.data.repository.GoogleAuthRepositoryImpl
+import com.example.mordisko.features.user.authentication.login.data.repository.LogoutRepositoryImpl
+import com.example.mordisko.features.user.authentication.login.data.repository.UserRepositoryImpl
+import com.example.mordisko.features.user.authentication.login.domain.repository.GoogleAuthRepository
+import com.example.mordisko.features.user.authentication.login.domain.repository.LogoutRepository
+import com.example.mordisko.features.user.authentication.login.domain.repository.UserRepository
 import dagger.Binds
 import dagger.Module
-import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
@@ -27,4 +27,10 @@ abstract class AuthModule {
     abstract fun bindLogoutRepository(
         impl: LogoutRepositoryImpl
     ): LogoutRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUserRepository(
+        impl: UserRepositoryImpl
+    ): UserRepository
 }

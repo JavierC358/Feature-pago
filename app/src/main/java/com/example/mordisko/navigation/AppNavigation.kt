@@ -7,25 +7,42 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
-import com.example.mordisko.features.authentication.presentation.google.GoogleAuthViewModel
-import com.example.mordisko.features.authentication.presentation.login.*
-import com.example.mordisko.features.authentication.presentation.splash.SplashScreen
-import com.example.mordisko.features.cart.presentation.*
-import com.example.mordisko.features.cart.presentation.maps.MapScreen
-import com.example.mordisko.features.dashboard.screen.OrdersStatsScreen
-import com.example.mordisko.features.dashboard.screen.SupportScreen
-import com.example.mordisko.features.home.HomeScreen
-import com.example.mordisko.features.menu.domain.model.getPizzaItemsForCategory
-import com.example.mordisko.features.menu.presentation.screens.MenuPizzasScreen
-import com.example.mordisko.features.menu.presentation.viewmodel.MenuViewModel
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.example.mordisko.core.navigation.Routes
+import com.example.mordisko.features.admin.screens.AdminVerificacionesScreen
+import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
+import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
+import com.example.mordisko.features.user.authentication.presentation.login.LoginScreen
+import com.example.mordisko.features.user.authentication.presentation.login.RegisterScreen
+import com.example.mordisko.features.user.authentication.presentation.splash.SplashScreen
+import com.example.mordisko.features.user.cart.presentation.CartScreen
+import com.example.mordisko.features.user.cart.presentation.CartViewModel
+import com.example.mordisko.features.user.cart.presentation.DeliveryScreen
+import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
+import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
+import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen
+import com.example.mordisko.features.user.cart.presentation.VerificarPagoScreen
+import com.example.mordisko.features.user.cart.presentation.maps.MapScreen
+import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
+import com.example.mordisko.features.user.dashboard.screen.SupportScreen
+import com.example.mordisko.features.user.home.HomeScreen
+import com.example.mordisko.features.user.menu.domain.model.getPizzaItemsForCategory
+import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
+import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
 
 @Composable
 fun AppNavigation(
@@ -37,10 +54,10 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route ?: ""
 
-    val showBottomBar = currentRoute.startsWith("home") ||
-            currentRoute.startsWith("menu/") ||
-            currentRoute == "cart" ||
-            currentRoute == "delivery"
+    val showBottomBar = currentRoute.startsWith(Routes.Home) ||
+            currentRoute.startsWith("${Routes.Menu}/") ||
+            currentRoute == Routes.Cart ||
+            currentRoute == Routes.Delivery
 
     Scaffold(
         bottomBar = {
@@ -51,81 +68,81 @@ fun AppNavigation(
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = "splash",
+            startDestination = Routes.Splash,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("splash") {
+            composable(Routes.Splash) {
                 SplashScreen(
                     onNavigateToLogin = {
-                        navController.navigate("login") {
-                            popUpTo("splash") { inclusive = true }
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.Splash) { inclusive = true }
                         }
                     },
                     onNavigateToHome = {
-                        navController.navigate("home") {
-                            popUpTo("splash") { inclusive = true }
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Splash) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable("login") {
+            composable(Routes.Login) {
                 LoginScreen(
                     onLoginSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("login") { inclusive = true }
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Login) { inclusive = true }
                         }
                     },
                     onNavigateToForgotPassword = {
-                        navController.navigate("forgot_password")
+                        navController.navigate(Routes.ForgotPassword)
                     },
                     onNavigateToRegister = {
-                        navController.navigate("register")
+                        navController.navigate(Routes.Register)
                     },
                     googleLauncher = googleLauncher,
                     googleAuthViewModel = googleAuthViewModel
                 )
             }
 
-            composable("register") {
+            composable(Routes.Register) {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        navController.navigate("home") {
-                            popUpTo("register") { inclusive = true }
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Register) { inclusive = true }
                         }
                     },
                     onBackToLogin = {
-                        navController.navigate("login") {
-                            popUpTo("register") { inclusive = true }
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.Register) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable("forgot_password") {
+            composable(Routes.ForgotPassword) {
                 ForgotPasswordScreen(
                     onBackToLogin = {
-                        navController.navigate("login") {
-                            popUpTo("forgot_password") { inclusive = true }
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.ForgotPassword) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable("home") {
+            composable(Routes.Home) {
                 HomeScreen(
                     onCategorySelected = { category ->
-                        navController.navigate("menu/$category")
+                        navController.navigate("${Routes.Menu}/$category")
                     },
                     onLogout = {
-                        navController.navigate("login") {
-                            popUpTo("home") { inclusive = true }
+                        navController.navigate(Routes.Login) {
+                            popUpTo(Routes.Home) { inclusive = true }
                         }
                     }
                 )
             }
 
-            composable("menu/{category}") { backStackEntry ->
+            composable("${Routes.Menu}/{category}") { backStackEntry ->
                 val category = backStackEntry.arguments?.getString("category") ?: ""
                 val pizzas = getPizzaItemsForCategory(category)
                 val viewModel: MenuViewModel = hiltViewModel()
@@ -138,12 +155,12 @@ fun AppNavigation(
                 )
             }
 
-            composable("cart") {
+            composable(Routes.Cart) {
                 CartScreen(
                     cartViewModel = cartViewModel,
                     navController = navController,
                     onContinue = {
-                        navController.navigate("delivery")
+                        navController.navigate(Routes.Delivery)
                     },
                     onBack = {
                         navController.popBackStack()
@@ -151,7 +168,7 @@ fun AppNavigation(
                 )
             }
 
-            composable("delivery") {
+            composable(Routes.Delivery) {
                 DeliveryScreen(
                     navController = navController,
                     cartViewModel = cartViewModel,
@@ -167,12 +184,12 @@ fun AppNavigation(
                     cartViewModel = cartViewModel,
                     onBack = { navController.popBackStack() },
                     onContinue = {
-                        navController.navigate("order_summary")
+                        navController.navigate(Routes.OrderSummary)
                     }
                 )
             }
 
-            composable("map") {
+            composable(Routes.Map) {
                 MapScreen(
                     cartViewModel = cartViewModel,
                     onConfirm = {
@@ -184,7 +201,7 @@ fun AppNavigation(
                 )
             }
 
-            composable("order_summary") {
+            composable(Routes.OrderSummary) {
                 OrderSummaryScreen(
                     cartViewModel = cartViewModel,
                     navController = navController,
@@ -192,14 +209,33 @@ fun AppNavigation(
                 )
             }
 
-            composable("order_status/{orderNumber}") { backStackEntry ->
+            composable("${Routes.OrderStatus}/{orderNumber}/{montoTotal}") { backStackEntry ->
                 val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: "Desconocido"
+                val montoTotal = backStackEntry.arguments?.getString("montoTotal")?.toDoubleOrNull() ?: 0.0
+
                 OrderStatusScreen(
                     orderNumber = orderNumber,
-                    onBackToHome = {
-                        navController.navigate("home") {
-                            popUpTo("order_status/{orderNumber}") { inclusive = true }
+                    montoTotal = montoTotal,
+                    onComprobarPago = {
+                        navController.navigate(Routes.verificarPagoRoute(orderNumber))
+                    },
+                    onCancelar = {
+                        navController.navigate(Routes.Home) {
+                            popUpTo("${Routes.OrderStatus}/{orderNumber}/{montoTotal}") { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = true
                         }
+                    }
+                )
+            }
+
+            composable(Routes.VerificarPagoWithArg) { backStackEntry ->
+                val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
+
+                VerificarPagoScreen(
+                    orderNumber = orderNumber,
+                    onCerrar = {
+                        navController.popBackStack()
                     }
                 )
             }
@@ -211,6 +247,10 @@ fun AppNavigation(
             composable("support") {
                 SupportScreen()
             }
+
+            composable(Routes.AdminVerificaciones) {
+                AdminVerificacionesScreen()
+            }
         }
     }
 }
@@ -218,7 +258,7 @@ fun AppNavigation(
 @Composable
 fun BottomBar(navController: NavHostController) {
     val bottomNavItems = listOf(
-        BottomNavItem("home", "Inicio", Icons.Default.Home),
+        BottomNavItem(Routes.Home, "Inicio", Icons.Default.Home),
         BottomNavItem("stats", "Pedidos", Icons.Default.BarChart),
         BottomNavItem("support", "Soporte", Icons.Default.Phone)
     )
