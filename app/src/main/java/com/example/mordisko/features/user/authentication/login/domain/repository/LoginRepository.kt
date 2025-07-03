@@ -3,5 +3,5 @@ package com.example.mordisko.features.user.authentication.login.domain.repositor
 interface LoginRepository {
     suspend fun loginWithEmailAndPassword(email: String, password: String): Boolean
     suspend fun registerWithEmailAndPassword(email: String, password: String): Boolean
-    fun logout()
+    suspend fun getUserRole(): String?
 }

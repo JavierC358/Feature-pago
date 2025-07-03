@@ -10,4 +10,8 @@ class LoginUseCase @Inject constructor(
     suspend operator fun invoke(email: String, password: String): Boolean {
         return repository.loginWithEmailAndPassword(email, password)
     }
+
+    suspend fun getUserRole(): String? {
+        return repository.getUserRole()
+    }
 }

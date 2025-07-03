@@ -194,9 +194,8 @@ fun PizzaDetailScreen(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 IconButton(onClick = {
-                    val unitPrice = pizza.priceBySize?.get(selectedSize) ?: pizza.priceUsd ?: 0.0
-                    val extrasPrice = selectedExtras.sumOf { it.priceUsd }
-                    val totalPrice = (unitPrice + extrasPrice) * quantity
+                    val unitPrice = (pizza.priceBySize?.get(selectedSize) ?: pizza.priceUsd ?: 0.0) +
+                            selectedExtras.sumOf { it.priceUsd }
 
                     cartViewModel.addItem(
                         CartItem(
@@ -204,7 +203,7 @@ fun PizzaDetailScreen(
                             size = selectedSize,
                             quantity = quantity,
                             imageRes = pizza.imageRes,
-                            priceUsd = totalPrice,
+                            priceUsd = unitPrice, // ✅ Guardamos solo el precio unitario
                             extras = selectedExtras
                         )
                     )

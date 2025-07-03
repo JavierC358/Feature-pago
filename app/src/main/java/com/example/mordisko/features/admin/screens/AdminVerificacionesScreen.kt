@@ -1,19 +1,11 @@
 package com.example.mordisko.features.admin.screens
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -21,11 +13,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.mordisko.core.navigation.Routes
 import com.example.mordisko.features.admin.viewmodel.AdminViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AdminVerificacionesScreen(
+    navController: NavController,
     viewModel: AdminViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -36,14 +31,29 @@ fun AdminVerificacionesScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Verificaciones de pago") })
+            TopAppBar(
+                title = { Text("Verificaciones de pago") },
+                navigationIcon = {
+                    IconButton(onClick = {
+                        navController.navigate("admin_dashboard") {
+                            popUpTo(Routes.AdminVerificaciones) { inclusive = true }
+                        }
+                    }) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            )
         }
     ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .fillMaxSize()
+        ) {
             if (state.isLoading) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
             } else {
-                LazyColumn {
+                LazyColumn(modifier = Modifier.weight(1f)) {
                     items(state.verificaciones) { item ->
                         Card(
                             modifier = Modifier
@@ -57,11 +67,30 @@ fun AdminVerificacionesScreen(
                                 Text("Tel: ${item.phoneNumber}")
                                 Text("Estado: ${item.status}")
                                 Spacer(modifier = Modifier.height(8.dp))
-                                if (item.status == "pendiente") {
-                                    Button(onClick = {
-                                        viewModel.marcarComoVerificada(item.orderNumber)
-                                    }) {
-                                        Text("Marcar como verificada")
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            navController.navigate("order_detail/${item.orderNumber}")
+                                        },
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text("Ver Detalles")
+                                    }
+
+                                    // ✅ Condición robusta para mostrar el botón
+                                    if (item.status.lowercase().contains("pendiente")) {
+                                        Button(
+                                            onClick = {
+                                                viewModel.marcarComoVerificada(item.orderNumber)
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        ) {
+                                            Text("Marcar como verificada")
+                                        }
                                     }
                                 }
                             }

@@ -66,7 +66,7 @@ fun CartScreen(
     val cartItems = cartViewModel.cartItems.collectAsState().value
     val textColor = Color.Gray
     val priceColor = Color(0xFFE05B13)
-    val subtotal = cartItems.sumOf { it.priceUsd }
+    val subtotal = cartItems.sumOf { it.priceUsd * it.quantity}
 
     var showCommentDialog by remember { mutableStateOf(false) }
     var comment by remember { mutableStateOf("") }

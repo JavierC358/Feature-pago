@@ -7,8 +7,6 @@ import com.example.mordisko.features.user.cart.data.repository.OrderRepository
 import com.example.mordisko.features.user.cart.domain.model.CartItem
 import com.example.mordisko.features.user.cart.domain.model.OrderModel
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,40 +72,42 @@ class CartViewModel @Inject constructor(
     fun placeOrder(
         exchangeRate: Double,
         deliveryCostUsd: Double,
-        onResult: (Boolean, String?, String?) -> Unit
+        clearCartOnSuccess: Boolean = true,
+        onResult: (success: Boolean, error: String?, orderNumber: String?) -> Unit
     ) {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-        if (userId == null) {
-            onResult(false, "Usuario no autenticado", null)
+        val items = _cartItems.value
+        val delivery = _deliveryOption.value
+        val address = _secondaryAddress.value
+        val reference = _addressReference.value
+        val payment = _paymentMethod.value
+
+        if (items.isEmpty()) {
+            onResult(false, "El carrito está vacío", null)
             return
         }
 
-        val cartItemsList = cartItems.value
-        val subtotalUsd = cartItemsList.sumOf { it.priceUsd * it.quantity }
+        val subtotalUsd = items.sumOf { it.priceUsd * it.quantity }
         val totalUsd = subtotalUsd + deliveryCostUsd
         val totalBs = totalUsd * exchangeRate
 
         val order = OrderModel(
-            orderNumber = "", // El repositorio lo genera
-            userId = "",      // El repositorio lo coloca
-            items = cartItemsList,
-            deliveryOption = deliveryOption.value?.name ?: "No definido",
-            address = secondaryAddress.value,
-            reference = addressReference.value.ifBlank { null },
-            paymentMethod = paymentMethod.value?.name ?: "No definido",
+            items = items,
+            deliveryOption = delivery?.name ?: "",
+            address = address,
+            reference = reference,
+            paymentMethod = payment?.name ?: "",
             exchangeRate = exchangeRate,
             subtotalUsd = subtotalUsd,
             deliveryCostUsd = deliveryCostUsd,
             totalUsd = totalUsd,
-            totalBs = totalBs,
-            timestamp = Timestamp.now()
+            totalBs = totalBs
         )
 
         viewModelScope.launch {
             val result = orderRepository.saveOrder(order)
             if (result.isSuccess) {
-                clearCart()
-                val orderNumber = result.getOrNull()
+                if (clearCartOnSuccess) clearCart()
+                val orderNumber = result.getOrNull() // 👈 devuelve el número generado
                 onResult(true, null, orderNumber)
             } else {
                 onResult(false, result.exceptionOrNull()?.message, null)

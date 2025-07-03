@@ -30,7 +30,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -45,6 +44,7 @@ fun LoginScreen(
     loginViewModel: LoginViewModel = hiltViewModel(),
     googleAuthViewModel: GoogleAuthViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit,
+    onNavigateToAdminPanel: () -> Unit,
     onNavigateToForgotPassword: () -> Unit,
     onNavigateToRegister: () -> Unit,
     googleLauncher: ActivityResultLauncher<Intent>
@@ -55,6 +55,7 @@ fun LoginScreen(
     val password by loginViewModel.password.collectAsState()
     val isLoginEnabled by loginViewModel.isLoginEnable.collectAsState()
     val loginSuccess by loginViewModel.loginSuccess.collectAsState()
+    val userRole by loginViewModel.userRole.collectAsState()
 
     val isLoading by googleAuthViewModel.isLoading.collectAsState()
     val isSuccess by googleAuthViewModel.isSuccess.collectAsState()
@@ -62,19 +63,31 @@ fun LoginScreen(
 
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
+    // 👉 Navegación según éxito con Google
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
-            Log.d("GoogleLogin", "Navegando al Home desde LoginScreen")
             googleAuthViewModel.clearSuccess()
             onLoginSuccess()
         }
     }
 
-    LaunchedEffect(loginSuccess) {
+    // 👉 Navegación según éxito con Email y Rol
+    LaunchedEffect(loginSuccess, userRole) {
         if (loginSuccess) {
-            Log.d("EmailLogin", "Navegando al Home desde LoginScreen (email)")
+            when (userRole) {
+                "admin" -> {
+                    Log.d("LoginScreen", "Rol: admin -> Navegar al Panel Admin")
+                    onNavigateToAdminPanel()
+                }
+                "cliente" -> {
+                    Log.d("LoginScreen", "Rol: cliente -> Navegar al Home")
+                    onLoginSuccess()
+                }
+                else -> {
+                    Log.w("LoginScreen", "Rol no reconocido: $userRole")
+                }
+            }
             loginViewModel.clearLoginSuccess()
-            onLoginSuccess()
         }
     }
 
@@ -101,7 +114,6 @@ fun LoginScreen(
                 trailingIcon = {
                     val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
                     val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
-
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(imageVector = image, contentDescription = description)
                     }
@@ -112,8 +124,8 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    loginViewModel.onLoginSelected(email, password){
-                        onLoginSuccess()
+                    loginViewModel.onLoginSelected(email, password) {
+                        // Navegación ahora depende del rol → manejado en LaunchedEffect
                     }
                 },
                 enabled = isLoginEnabled,

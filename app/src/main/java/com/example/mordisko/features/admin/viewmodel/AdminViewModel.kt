@@ -55,6 +55,7 @@ class AdminViewModel @Inject constructor(
 
     fun marcarComoVerificada(orderNumber: String) {
         viewModelScope.launch {
+            // 1. Actualiza la subcolección
             firestore.collection("orders")
                 .document(orderNumber)
                 .collection("payment_verification")
@@ -62,7 +63,14 @@ class AdminViewModel @Inject constructor(
                 .update("status", "verificado")
                 .await()
 
-            loadVerificaciones() // refresca la lista
+            // 2. Actualiza también el campo 'paymentStatus' en el documento de la orden
+            firestore.collection("orders")
+                .document(orderNumber)
+                .update("paymentStatus", "verificado")
+                .await()
+
+            // 3. Refresca la lista en pantalla
+            loadVerificaciones()
         }
     }
 }

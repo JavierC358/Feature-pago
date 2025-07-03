@@ -1,6 +1,5 @@
 package com.example.mordisko.features.user.authentication.presentation.login
 
-import android.util.Log
 import android.util.Patterns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,6 +30,9 @@ class LoginViewModel @Inject constructor(
     private val _loginError = MutableStateFlow<String?>(null)
     val loginError: StateFlow<String?> = _loginError
 
+    private val _userRole = MutableStateFlow("")
+    val userRole: StateFlow<String> = _userRole
+
     fun onLoginChanged(email: String, password: String) {
         _email.value = email
         _password.value = password
@@ -47,7 +49,11 @@ class LoginViewModel @Inject constructor(
             if (result) {
                 _loginSuccess.value = true
                 _loginError.value = null
-                onSuccess() // 🔄 Invoca callback desde LoginScreen si se usa
+
+                val role = loginUseCase.getUserRole()
+                _userRole.value = role ?: "cliente"
+
+                onSuccess()
             } else {
                 _loginError.value = "Correo o contraseña incorrectos"
                 _loginSuccess.value = false

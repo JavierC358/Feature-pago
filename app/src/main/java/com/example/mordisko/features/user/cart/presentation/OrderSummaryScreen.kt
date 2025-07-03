@@ -20,6 +20,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 
 @Composable
 fun OrderSummaryScreen(
@@ -33,7 +35,7 @@ fun OrderSummaryScreen(
     val address = cartViewModel.secondaryAddress.collectAsState().value
     val reference = cartViewModel.addressReference.collectAsState().value
     val paymentMethod = cartViewModel.paymentMethod.collectAsState().value
-    val exchangeRate = 40.0
+    val exchangeRate = 100.0
 
     val deliveryCostUsd = when (deliveryOption) {
         DeliveryOption.Moto -> 2.0
@@ -122,7 +124,15 @@ fun OrderSummaryScreen(
                     Text("Total en USD: $${"%.2f".format(totalUsd)}")
                     Text("Total en Bs: Bs. ${"%.2f".format(totalBs)}", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Método de pago: ${paymentMethod?.name ?: "No seleccionado"}")
+
+                    val metodoPagoTexto = when (paymentMethod) {
+                        PaymentMethod.PagoMovil -> "Pago móvil"
+                        PaymentMethod.PuntoDeVenta -> "Punto de venta"
+                        PaymentMethod.Efectivo -> "Efectivo"
+                        else -> "No seleccionado"
+                    }
+
+                    Text("Método de pago: $metodoPagoTexto")
                 }
             }
 
@@ -134,8 +144,8 @@ fun OrderSummaryScreen(
                         deliveryCostUsd = deliveryCostUsd,
                         onResult = { success, error, orderNumber ->
                             if (success && orderNumber != null) {
-                                // 👇 Aquí pasamos también el total en bolívares como segundo argumento
-                                navController.navigate("order_status/$orderNumber/${"%.2f".format(totalBs)}")
+                                val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
+                                navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
                             } else {
                                 Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                             }

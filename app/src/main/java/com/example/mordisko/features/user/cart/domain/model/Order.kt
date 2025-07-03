@@ -8,12 +8,12 @@ data class OrderModel(
     val items: List<CartItem> = emptyList(),
     val deliveryOption: String = "",
     val address: String = "",
-    val reference: String? = null,
+    val reference: String = "",
     val paymentMethod: String = "",
     val exchangeRate: Double = 0.0,
     val subtotalUsd: Double = 0.0,
     val deliveryCostUsd: Double = 0.0,
     val totalUsd: Double = 0.0,
     val totalBs: Double = 0.0,
-    val timestamp: Timestamp? = null
+    val timestamp: Timestamp = Timestamp.now()
 )

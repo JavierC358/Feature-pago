@@ -1,36 +1,47 @@
 package com.example.mordisko.core.di
 
-import com.example.mordisko.features.user.authentication.login.data.repository.GoogleAuthRepositoryImpl
-import com.example.mordisko.features.user.authentication.login.data.repository.LogoutRepositoryImpl
-import com.example.mordisko.features.user.authentication.login.data.repository.UserRepositoryImpl
-import com.example.mordisko.features.user.authentication.login.domain.repository.GoogleAuthRepository
+import com.example.mordisko.features.user.authentication.login.data.repository.LoginRepositoryImpl
+import com.example.mordisko.features.user.authentication.login.domain.LogoutUseCase
+import com.example.mordisko.features.user.authentication.login.domain.repository.LoginRepository
 import com.example.mordisko.features.user.authentication.login.domain.repository.LogoutRepository
-import com.example.mordisko.features.user.authentication.login.domain.repository.UserRepository
-import dagger.Binds
+import com.example.mordisko.features.user.cart.data.repository.OrderRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
+import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-abstract class AuthModule {
+object FirebaseModule {
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindGoogleAuthRepository(
-        impl: GoogleAuthRepositoryImpl
-    ): GoogleAuthRepository
+    fun provideFirebaseAuth(): FirebaseAuth = FirebaseAuth.getInstance()
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindLogoutRepository(
-        impl: LogoutRepositoryImpl
-    ): LogoutRepository
+    fun provideFirebaseFirestore(): FirebaseFirestore = FirebaseFirestore.getInstance()
 
-    @Binds
+    @Provides
     @Singleton
-    abstract fun bindUserRepository(
-        impl: UserRepositoryImpl
-    ): UserRepository
+    fun provideLoginRepository(
+        firebaseAuth: FirebaseAuth,
+        firestore: FirebaseFirestore // 🧩 Añadido para soporte de getUserRole
+    ): LoginRepository = LoginRepositoryImpl(firebaseAuth, firestore)
+
+    @Provides
+    @Singleton
+    fun provideLogoutUseCase(
+        logoutRepository: LogoutRepository
+    ): LogoutUseCase = LogoutUseCase(logoutRepository)
+
+    @Provides
+    @Singleton
+    fun provideOrderRepository(
+        firestore: FirebaseFirestore,
+        firebaseAuth: FirebaseAuth
+    ): OrderRepository = OrderRepository(firestore, firebaseAuth)
 }

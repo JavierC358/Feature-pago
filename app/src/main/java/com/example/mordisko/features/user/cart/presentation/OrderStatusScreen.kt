@@ -4,109 +4,126 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Money
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun OrderStatusScreen(
-    orderNumber: String?,
-    montoTotal: Double, // 👈 nuevo parámetro
+    orderNumber: String,
+    montoTotal: Double,
     onComprobarPago: () -> Unit,
-    onCancelar: () -> Unit
+    onCancelar: () -> Unit,
+    viewModel: OrderStatusViewModel = hiltViewModel(),
+    navController: NavController
 ) {
-    val orange = Color(0xFFE05B13)
+    val paymentStatus by viewModel.paymentStatus.collectAsState()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.White)
-            .padding(24.dp),
-        contentAlignment = Alignment.Center
-    ) {
+    // Empezar a escuchar el estado del pago
+    LaunchedEffect(Unit) {
+        viewModel.monitorPaymentStatus(orderNumber)
+    }
+
+    // Navegar automáticamente si el pago fue verificado
+    LaunchedEffect(paymentStatus) {
+        if (paymentStatus == "verificado") {
+            navController.navigate("pedido_verificado") {
+                popUpTo("order_status/$orderNumber/$montoTotal") { inclusive = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Estado del Pago") }
+            )
+        }
+    ) { padding ->
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp)
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = Icons.Default.CheckCircle,
-                contentDescription = "Pedido confirmado",
-                tint = orange,
-                modifier = Modifier.size(80.dp)
-            )
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "¡Gracias por tu compra!",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.Bold
+                text = "Orden N°: $orderNumber",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold
             )
 
-            Text(
-                text = "Realiza el pago móvil por el monto exacto y luego presiona 'Comprobar' para verificar tu pago.",
-                fontSize = 16.sp,
-                lineHeight = 22.sp,
-                modifier = Modifier.padding(horizontal = 12.dp),
-                color = Color.Gray
-            )
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Monto a transferir: Bs. %.2f".format(montoTotal),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.Black
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // Datos del Pago Móvil
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color(0xFFF8F8F8), shape = RoundedCornerShape(12.dp))
-                    .padding(16.dp)
-            ) {
-                Text("Banco: Banco Mercantil", fontSize = 16.sp)
-                Text("Teléfono: 0414-1234567", fontSize = 16.sp)
-                Text("Cédula/RIF: V-12345678", fontSize = 16.sp)
-            }
-
-            orderNumber?.let {
-                Text(
-                    text = "Número de orden: $it",
-                    fontSize = 14.sp,
-                    color = Color.DarkGray
-                )
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Botones
-            Column(
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Button(
-                    onClick = onComprobarPago,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = orange)
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
                 ) {
-                    Text("Comprobar")
-                }
+                    Text(
+                        text = "💳 Monto a pagar:",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium
+                    )
+                    Text(
+                        text = "Bs $montoTotal",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4CAF50)
+                    )
 
-                OutlinedButton(
-                    onClick = onCancelar,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text("Cancelar")
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "🏦 Banco: Banco de Venezuela\n📲 Pago móvil: 0412-0000000\n🆔 CI/RIF: V12345678",
+                        fontSize = 14.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "⏳ Estado actual: ${paymentStatus.uppercase()}",
+                        fontWeight = FontWeight.Medium
+                    )
                 }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onComprobarPago,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Comprobar Pago")
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            OutlinedButton(
+                onClick = onCancelar,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
+            ) {
+                Text("Cancelar Pedido")
             }
         }
     }

@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 enum class PaymentMethod {
-    PagoMovil, PuntoVenta, Efectivo
+    PagoMovil, Efectivo, PuntoDeVenta
 }
 
 @Composable
@@ -71,8 +71,8 @@ fun PaymentMethodScreen(
             PaymentOptionCard(
                 icon = Icons.Default.CreditCard,
                 title = "Punto de Venta",
-                isSelected = selectedMethod == PaymentMethod.PuntoVenta,
-                onClick = { selectedMethod = PaymentMethod.PuntoVenta }
+                isSelected = selectedMethod == PaymentMethod.PuntoDeVenta,
+                onClick = { selectedMethod = PaymentMethod.PuntoDeVenta }
             )
 
             PaymentOptionCard(
@@ -85,7 +85,12 @@ fun PaymentMethodScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             Button(
-                onClick = { selectedMethod?.let { onContinue(it) } },
+                onClick = {
+                    selectedMethod?.let {
+                        cartViewModel.setPaymentMethod(it)
+                        onContinue(it)
+                    }
+                },
                 enabled = selectedMethod != null,
                 modifier = Modifier
                     .fillMaxWidth()

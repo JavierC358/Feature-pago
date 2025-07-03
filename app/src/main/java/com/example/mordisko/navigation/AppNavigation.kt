@@ -1,6 +1,7 @@
 package com.example.mordisko.navigation
 
 import android.content.Intent
+import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -13,17 +14,25 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.mordisko.core.navigation.Routes
+import com.example.mordisko.features.admin.screens.AdminDashboardScreen
+import com.example.mordisko.features.admin.screens.AdminResumenPedidosScreen
 import com.example.mordisko.features.admin.screens.AdminVerificacionesScreen
+import com.example.mordisko.features.admin.screens.OrderDetailScreen
+import com.example.mordisko.features.admin.viewmodel.OrderDetailViewModel
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
 import com.example.mordisko.features.user.authentication.presentation.login.LoginScreen
@@ -35,6 +44,7 @@ import com.example.mordisko.features.user.cart.presentation.DeliveryScreen
 import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
 import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
 import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen
+import com.example.mordisko.features.user.cart.presentation.PedidoVerificadoScreen
 import com.example.mordisko.features.user.cart.presentation.VerificarPagoScreen
 import com.example.mordisko.features.user.cart.presentation.maps.MapScreen
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
@@ -43,6 +53,9 @@ import com.example.mordisko.features.user.home.HomeScreen
 import com.example.mordisko.features.user.menu.domain.model.getPizzaItemsForCategory
 import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
+import com.example.mordisko.features.admin.screens.OrderDetailScreen
+import com.example.mordisko.features.admin.screens.ResumenDeOrdenesScreen
+import java.util.Date
 
 @Composable
 fun AppNavigation(
@@ -82,6 +95,11 @@ fun AppNavigation(
                         navController.navigate(Routes.Home) {
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
+                    },
+                    onNavigateToAdminPanel = {
+                        navController.navigate("admin_dashboard") { // ✅ nueva ruta
+                            popUpTo(Routes.Splash) { inclusive = true }
+                        }
                     }
                 )
             }
@@ -90,6 +108,11 @@ fun AppNavigation(
                 LoginScreen(
                     onLoginSuccess = {
                         navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Login) { inclusive = true }
+                        }
+                    },
+                    onNavigateToAdminPanel = {
+                        navController.navigate(Routes.AdminVerificaciones) {
                             popUpTo(Routes.Login) { inclusive = true }
                         }
                     },
@@ -221,11 +244,12 @@ fun AppNavigation(
                     },
                     onCancelar = {
                         navController.navigate(Routes.Home) {
-                            popUpTo("${Routes.OrderStatus}/{orderNumber}/{montoTotal}") { inclusive = true }
+                            popUpTo(Routes.OrderStatus) { inclusive = true }
                             launchSingleTop = true
                             restoreState = true
                         }
-                    }
+                    },
+                    navController = navController
                 )
             }
 
@@ -249,11 +273,86 @@ fun AppNavigation(
             }
 
             composable(Routes.AdminVerificaciones) {
-                AdminVerificacionesScreen()
+                AdminVerificacionesScreen(navController = navController)
+            }
+
+            composable("admin_dashboard") {
+                AdminDashboardScreen(
+                    onNavigateToVerificaciones = {
+                        navController.navigate(Routes.AdminVerificaciones)
+                    },
+                    onNavigateToResumen = {
+                        navController.navigate("resumen_admin_screen")
+                    },
+                    onLogout = {
+                        navController.navigate(Routes.Login) {
+                            popUpTo("admin_dashboard") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("pedido_verificado") {
+                PedidoVerificadoScreen(
+                    cartViewModel = cartViewModel, // ✅ inyectado correctamente
+                    onFinalizar = {
+                        navController.navigate(Routes.Home) {
+                            popUpTo("pedido_verificado") { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable(
+                route = Routes.OrderDetail,
+                arguments = listOf(navArgument("orderNumber") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: return@composable
+
+                val viewModel: OrderDetailViewModel = hiltViewModel()
+                val orderState by viewModel.order.collectAsState()
+
+                LaunchedEffect(orderNumber) {
+                    Log.d("Pantalla", "OrderNumber recibido: $orderNumber")
+                    viewModel.loadOrder(orderNumber)
+                }
+
+                orderState?.let { order ->
+                    OrderDetailScreen(
+                        navController = navController,
+                        orderNumber = orderNumber
+                    )
+                }
+            }
+
+            composable("resumen_screen/{desde}/{hasta}") { backStackEntry ->
+                val desdeMillis = backStackEntry.arguments?.getString("desde")?.toLongOrNull()
+                val hastaMillis = backStackEntry.arguments?.getString("hasta")?.toLongOrNull()
+
+                if (desdeMillis != null && hastaMillis != null) {
+                    ResumenDeOrdenesScreen(
+                        fechaDesde = Date(desdeMillis),
+                        fechaHasta = Date(hastaMillis),
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+            }
+
+            composable("resumen_admin_screen") {
+                AdminResumenPedidosScreen(
+                    onConsultarClick = { desde, hasta ->
+                        // Navega a la pantalla de resultados pasando las fechas
+                        navController.navigate("resumen_screen/${desde.time}/${hasta.time}")
+                    },
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
 }
+
 
 @Composable
 fun BottomBar(navController: NavHostController) {

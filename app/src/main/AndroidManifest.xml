@@ -6,6 +6,7 @@
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <application
 
@@ -20,7 +21,15 @@
         android:theme="@style/Theme.Mordisko"
         tools:targetApi="31">
         <uses-library android:name="org.apache.http.legacy" android:required="false"/>
-
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
         <!-- MetaData para habilitar sign-in con Google -->
         <meta-data
             android:name="com.google.android.gms.signin.default_sign_in"
