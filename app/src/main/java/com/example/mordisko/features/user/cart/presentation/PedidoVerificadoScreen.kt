@@ -16,6 +16,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.mordisko.R
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import kotlinx.coroutines.launch
@@ -23,8 +24,8 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PedidoVerificadoScreen(
-    cartViewModel: CartViewModel, // ✅ ViewModel requerido para limpiar el carrito
-    onFinalizar: () -> Unit
+    cartViewModel: CartViewModel,
+    navController: NavHostController
 ) {
     // Bloquea la flecha de volver del sistema
     BackHandler(enabled = true) {
@@ -76,8 +77,10 @@ fun PedidoVerificadoScreen(
             Button(
                 onClick = {
                     scope.launch {
-                        cartViewModel.clearCart() // ✅ Limpiar el carrito
-                        onFinalizar()
+                        cartViewModel.clearCart()
+                        navController.navigate("home") {
+                            popUpTo(0) { inclusive = true } // 🔥 Elimina todo el backstack
+                        }
                     }
                 },
                 modifier = Modifier

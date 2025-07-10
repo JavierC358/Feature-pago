@@ -1,18 +1,27 @@
 package com.example.mordisko.features.user.menu.domain.util
 
+import android.util.Log
 import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 
-// 🔁 String → PizzaItemCategory
-fun mapStringToPizzaItemCategory(category: String): PizzaItemCategory {
-    return when (category.trim().lowercase()) {
-        "pizzas" -> PizzaItemCategory.PIZZAS
-        "calzone" -> PizzaItemCategory.CALZONE
-        "dedos de queso" -> PizzaItemCategory.DEDOS_DE_QUESO
-        "rolls de pizzas" -> PizzaItemCategory.ROLLS
-        "extras" -> PizzaItemCategory.EXTRAS
-        "postres" -> PizzaItemCategory.POSTRES
-        "bebidas" -> PizzaItemCategory.BEBIDAS
-        else -> throw IllegalArgumentException("Categoría no válida: $category")
+// 🔁 String → PizzaItemCategory (seguro y tolerante a errores)
+fun toPizzaItemCategory(category: String): PizzaItemCategory {
+    val normalized = category.trim().lowercase().replace("_", " ").replace("-", " ")
+    Log.d("🔥 Normalized Category", normalized)
+
+    val map = mapOf(
+        "pizzas" to PizzaItemCategory.PIZZAS,
+        "calzone" to PizzaItemCategory.CALZONE,
+        "dedos de queso" to PizzaItemCategory.DEDOS_DE_QUESO,
+        "dedos" to PizzaItemCategory.DEDOS_DE_QUESO,
+        "rolls" to PizzaItemCategory.ROLLS,
+        "rolls de pizzas" to PizzaItemCategory.ROLLS,
+        "extras" to PizzaItemCategory.EXTRAS,
+        "postres" to PizzaItemCategory.POSTRES,
+        "bebidas" to PizzaItemCategory.BEBIDAS
+    )
+
+    return map[normalized] ?: PizzaItemCategory.PIZZAS.also {
+        Log.e("❌ CategoryMapper", "Categoría inválida: '$category' → '$normalized'. Se usará PIZZAS por defecto.")
     }
 }
 

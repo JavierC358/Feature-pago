@@ -1,12 +1,9 @@
 package com.example.mordisko.features.user.menu.domain.model
 
-import androidx.annotation.DrawableRes
-
 data class PizzaItem(
-    val name: String,
-    val description: String,
-    @DrawableRes val imageRes: Int,
-    val category: PizzaItemCategory,
-    val priceBySize: Map<String, Double>? = null, // ✅ precios por tamaño (opcional)
-    val priceUsd: Double? = null // ✅ precio fijo para otras categorías (opcional)
-)
+    val name: String = "",
+    val description: String = "",
+    val imageRes: String = "", // 🔄 ahora es String, no Int
+    val category: PizzaItemCategory = PizzaItemCategory.PIZZAS,
+    val priceUsd: Double? = null,
+    val priceBySize: Map<String, Double>? = null)

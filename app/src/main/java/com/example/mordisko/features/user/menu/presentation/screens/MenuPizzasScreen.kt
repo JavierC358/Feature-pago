@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -30,19 +29,18 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
-import com.example.mordisko.features.user.menu.domain.model.PizzaItem
+import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
-import com.example.mordisko.features.user.menu.presentation.screens.PizzaDetailScreen
 
 @Composable
 fun MenuPizzasScreen(
     navController: NavController,
     category: String,
-    pizzas: List<PizzaItem>,
     cartViewModel: CartViewModel
 ) {
     val viewModel: MenuViewModel = hiltViewModel()
     val selectedPizza by viewModel.selectedPizza.collectAsState()
+    val products by viewModel.products.collectAsState()
 
     val orange = Color(0xFFE05B13)
 
@@ -52,11 +50,39 @@ fun MenuPizzasScreen(
             onBack = {
                 viewModel.clearSelectedPizza()
             },
-            navController = navController, // ✅ Solución aplicada aquí
-                    cartViewModel = cartViewModel
+            navController = navController,
+            cartViewModel = cartViewModel
         )
         return
     }
+
+    // Convertimos la categoría String a enum para comparar con la lista de productos
+    val categoryEnum = try {
+        PizzaItemCategory.valueOf(category.uppercase())
+    } catch (e: Exception) {
+        null
+    }
+
+    if (categoryEnum == null) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Categoría inválida",
+                color = Color.Red,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+        return
+    }
+
+    val filteredProducts = products.filter { it.category == categoryEnum }
 
     Column(
         modifier = Modifier
@@ -85,9 +111,9 @@ fun MenuPizzasScreen(
             )
         }
 
-        // 🧀 Título "Pizzas"
+        // 🧀 Título con el nombre de la categoría
         Text(
-            text = "Pizzas",
+            text = category.replace("_", " ").capitalize(),
             fontSize = 24.sp,
             color = Color.White,
             fontWeight = FontWeight.Bold,
@@ -102,7 +128,7 @@ fun MenuPizzasScreen(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.weight(1f)
         ) {
-            items(pizzas) { pizza ->
+            items(filteredProducts) { pizza ->
                 PizzaCard(
                     pizza = pizza,
                     onClick = {

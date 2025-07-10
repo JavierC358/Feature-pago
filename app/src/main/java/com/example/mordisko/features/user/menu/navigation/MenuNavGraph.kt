@@ -13,7 +13,6 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
-import com.example.mordisko.features.user.menu.domain.model.getPizzaItemsForCategory
 import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
 import com.example.mordisko.features.user.menu.presentation.screens.PizzaDetailScreen
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
@@ -24,13 +23,12 @@ fun NavGraphBuilder.menuNavGraph(
 ) {
     composable("menu/{category}") { backStackEntry ->
         val category = backStackEntry.arguments?.getString("category") ?: ""
-        val pizzas = getPizzaItemsForCategory(category)
+        val pizzas = (category)
         val viewModel: MenuViewModel = hiltViewModel()
 
         MenuPizzasScreen(
             navController = navController,
             category = category,
-            pizzas = pizzas,
             cartViewModel = cartViewModel
         )
     }

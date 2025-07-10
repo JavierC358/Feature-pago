@@ -72,9 +72,11 @@ fun HomeScreen(
             contentAlignment = Alignment.Center
         ) {
             // Centro: Pizzas
-            CircularCategoryCard(category = centerCategory, onClick = { onCategorySelected(centerCategory.name) })
+            CircularCategoryCard(category = centerCategory, onClick = {
+                onCategorySelected(centerCategory.enum.name) // ✅ CAMBIO
+            })
 
-            // Alrededor: otras categorías
+// Alrededor: otras categorías
             otherCategories.forEachIndexed { index, category ->
                 val angleDeg = (360f / otherCategories.size) * index - 90f
                 val angleRad = Math.toRadians(angleDeg.toDouble())
@@ -84,12 +86,13 @@ fun HomeScreen(
                 val offsetY = radiusPx * sin(angleRad)
 
                 Box(
-                    modifier = Modifier
-                        .offset {
-                            IntOffset(offsetX.toInt(), offsetY.toInt())
-                        }
+                    modifier = Modifier.offset {
+                        IntOffset(offsetX.toInt(), offsetY.toInt())
+                    }
                 ) {
-                    CircularCategoryCard(category = category, onClick = { onCategorySelected(category.name) })
+                    CircularCategoryCard(category = category, onClick = {
+                        onCategorySelected(category.enum.name) // ✅ CAMBIO
+                    })
                 }
             }
         }

@@ -2,30 +2,61 @@ package com.example.mordisko.features.user.menu.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.mordisko.features.user.menu.domain.model.PizzaItem
 import com.example.mordisko.features.user.cart.domain.model.SelectedExtra
+import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
+import com.example.mordisko.features.user.menu.domain.repository.MenuRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MenuViewModel @Inject constructor() : ViewModel() {
+class MenuViewModel @Inject constructor(
+    private val repository: MenuRepository // ✅ Añadimos esta línea
+) : ViewModel() {
 
-    // 🍕 Pizza seleccionada
+    // 🍕 Productos del menú (cargados desde Firestore)
+    private val _products = MutableStateFlow<List<PizzaItem>>(emptyList())
+    val products: StateFlow<List<PizzaItem>> = _products
+
+    // 🧀 Extras filtrados
+    private val _extras = MutableStateFlow<List<PizzaItem>>(emptyList())
+    val extras: StateFlow<List<PizzaItem>> = _extras
+
+    // ✅ Cargar productos al iniciar
+    init {
+        fetchProductsFromFirestore()
+
+        viewModelScope.launch {
+            products.collectLatest { lista ->
+                _extras.value = lista.filter { it.category == PizzaItemCategory.EXTRAS } // ✅ Enum directamente
+            }
+        }
+    }
+
+    private fun fetchProductsFromFirestore() {
+        viewModelScope.launch {
+            repository.getAllProducts()
+                .catch { e -> e.printStackTrace() }
+                .collectLatest { productos ->
+                    _products.value = productos
+                }
+        }
+    }
+
+    // ✅ Todo lo que ya tenías sigue igual...
+
     private val _selectedPizza = MutableStateFlow<PizzaItem?>(null)
     val selectedPizza: StateFlow<PizzaItem?> = _selectedPizza
 
-    fun selectPizza(pizza: PizzaItem) {
-        Log.d("MenuViewModel", "Pizza seleccionada: ${pizza.name}")
-        _selectedPizza.value = pizza
-    }
+    fun selectPizza(pizza: PizzaItem) { _selectedPizza.value = pizza }
+    fun clearSelectedPizza() { _selectedPizza.value = null }
 
-    fun clearSelectedPizza() {
-        _selectedPizza.value = null
-    }
-
-    // 🧀 Extras seleccionados por nombre de pizza
     private val _selectedExtras = MutableStateFlow<Map<String, List<SelectedExtra>>>(emptyMap())
     val selectedExtras: StateFlow<Map<String, List<SelectedExtra>>> = _selectedExtras
 

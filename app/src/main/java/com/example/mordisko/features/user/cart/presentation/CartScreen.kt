@@ -45,6 +45,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -151,12 +152,14 @@ fun CartScreen(
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Image(
-                            painter = painterResource(id = item.imageRes),
-                            contentDescription = item.name,
-                            modifier = Modifier.size(80.dp)
-                        )
+                        val context = LocalContext.current
+                        val imageResId = context.resources.getIdentifier(item.imageRes, "drawable", context.packageName)
 
+                        Image(
+                            painter = painterResource(id = imageResId),
+                            contentDescription = item.name,
+                            modifier = Modifier.size(80.dp) // Puedes ajustar el tamaño si lo deseas
+                        )
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Column(

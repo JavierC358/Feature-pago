@@ -32,6 +32,7 @@ import com.example.mordisko.features.admin.screens.AdminDashboardScreen
 import com.example.mordisko.features.admin.screens.AdminResumenPedidosScreen
 import com.example.mordisko.features.admin.screens.AdminVerificacionesScreen
 import com.example.mordisko.features.admin.screens.OrderDetailScreen
+import com.example.mordisko.features.admin.screens.ResumenDeOrdenesScreen
 import com.example.mordisko.features.admin.viewmodel.OrderDetailViewModel
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
@@ -50,11 +51,7 @@ import com.example.mordisko.features.user.cart.presentation.maps.MapScreen
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
 import com.example.mordisko.features.user.dashboard.screen.SupportScreen
 import com.example.mordisko.features.user.home.HomeScreen
-import com.example.mordisko.features.user.menu.domain.model.getPizzaItemsForCategory
 import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
-import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
-import com.example.mordisko.features.admin.screens.OrderDetailScreen
-import com.example.mordisko.features.admin.screens.ResumenDeOrdenesScreen
 import java.util.Date
 
 @Composable
@@ -167,13 +164,10 @@ fun AppNavigation(
 
             composable("${Routes.Menu}/{category}") { backStackEntry ->
                 val category = backStackEntry.arguments?.getString("category") ?: ""
-                val pizzas = getPizzaItemsForCategory(category)
-                val viewModel: MenuViewModel = hiltViewModel()
 
                 MenuPizzasScreen(
                     navController = navController,
                     category = category,
-                    pizzas = pizzas,
                     cartViewModel = cartViewModel
                 )
             }
@@ -295,11 +289,7 @@ fun AppNavigation(
             composable("pedido_verificado") {
                 PedidoVerificadoScreen(
                     cartViewModel = cartViewModel, // ✅ inyectado correctamente
-                    onFinalizar = {
-                        navController.navigate(Routes.Home) {
-                            popUpTo("pedido_verificado") { inclusive = true }
-                        }
-                    }
+                    navController = navController
                 )
             }
 
@@ -349,6 +339,16 @@ fun AppNavigation(
                     }
                 )
             }
+
+            composable("menu_screen/{category}") { backStackEntry ->
+                val category = backStackEntry.arguments?.getString("category") ?: ""
+                MenuPizzasScreen(
+                    navController = navController,
+                    category = category,
+                    cartViewModel = hiltViewModel()
+                )
+            }
+
         }
     }
 }

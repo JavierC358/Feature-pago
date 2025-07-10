@@ -1,5 +1,7 @@
 package com.example.mordisko.core.di
 
+import android.content.Context
+import com.example.mordisko.features.admin.data.repository.MenuRepositoryImpl
 import com.example.mordisko.features.user.authentication.login.data.repository.LoginRepositoryImpl
 import com.example.mordisko.features.user.authentication.login.domain.LogoutUseCase
 import com.example.mordisko.features.user.authentication.login.domain.repository.LoginRepository
@@ -10,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
@@ -44,4 +47,11 @@ object FirebaseModule {
         firestore: FirebaseFirestore,
         firebaseAuth: FirebaseAuth
     ): OrderRepository = OrderRepository(firestore, firebaseAuth)
+
+    @Provides
+    @Singleton
+    fun provideMenuRepository(
+        firestore: FirebaseFirestore,
+        @ApplicationContext context: Context
+    ): MenuRepositoryImpl = MenuRepositoryImpl(firestore, context)
 }
