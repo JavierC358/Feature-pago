@@ -1,10 +1,11 @@
-package com.example.mordisko.features.admin.viewmodel
+package com.example.mordisko.features.admin.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -17,6 +18,10 @@ class AdminViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(AdminVerificacionesState())
     val state = _state.asStateFlow()
+
+    private val _exchangeRate = MutableStateFlow(0.0)
+    val exchangeRate: StateFlow<Double> = _exchangeRate
+
 
     fun loadVerificaciones() {
         viewModelScope.launch {
@@ -71,6 +76,21 @@ class AdminViewModel @Inject constructor(
 
             // 3. Refresca la lista en pantalla
             loadVerificaciones()
+        }
+    }
+
+    fun loadExchangeRate() {
+        viewModelScope.launch {
+            val doc = firestore.collection("config").document("settings").get().await()
+            val tasa = doc.getDouble("exchangeRateUsdToVes") ?: 0.0
+            _exchangeRate.value = tasa
+        }
+    }
+
+    fun guardarExchangeRate(nuevaTasa: Double) {
+        viewModelScope.launch {
+            firestore.collection("config").document("settings")
+                .update("exchangeRateUsdToVes", nuevaTasa)
         }
     }
 }

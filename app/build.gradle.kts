@@ -117,6 +117,15 @@ dependencies {
     implementation(libs.firebase.auth)
     implementation(libs.google.auth)
 
+    //Para cargar imágenes desde URL
+
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // Storage(Almacenamiento en firestore)
+
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

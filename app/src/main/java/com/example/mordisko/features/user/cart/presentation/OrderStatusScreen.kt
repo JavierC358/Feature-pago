@@ -1,12 +1,26 @@
 package com.example.mordisko.features.user.cart.presentation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Money
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,13 +41,15 @@ fun OrderStatusScreen(
     navController: NavController
 ) {
     val paymentStatus by viewModel.paymentStatus.collectAsState()
+    val pagoMovilData = viewModel.pagoMovilData.value
 
-    // Empezar a escuchar el estado del pago
+    // Escuchar estado del pago
     LaunchedEffect(Unit) {
         viewModel.monitorPaymentStatus(orderNumber)
+        viewModel.cargarPagoMovil() // ✅ Cargar datos al entrar
     }
 
-    // Navegar automáticamente si el pago fue verificado
+    // Navegar si fue verificado
     LaunchedEffect(paymentStatus) {
         if (paymentStatus == "verificado") {
             navController.navigate("pedido_verificado") {
@@ -92,7 +108,9 @@ fun OrderStatusScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "🏦 Banco: Banco de Venezuela\n📲 Pago móvil: 0412-0000000\n🆔 CI/RIF: V12345678",
+                        text = "🏦 Banco: ${pagoMovilData.banco}\n" +
+                                "📲 Pago móvil: ${pagoMovilData.telefono}\n" +
+                                "🆔 CI/RIF: ${pagoMovilData.cedula}",
                         fontSize = 14.sp
                     )
 

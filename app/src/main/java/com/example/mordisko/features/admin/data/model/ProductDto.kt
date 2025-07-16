@@ -8,26 +8,24 @@ import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.domain.util.toPizzaItemCategory
 
 data class ProductDto(
+    val id: String = "",
     val name: String = "",
     val description: String = "",
-    val imageRes: String = "", // 🔄 Antes era Int
+    val imageUrl: String = "",
     val category: String = "",
     val priceUsd: Double? = null,
-    val priceBySize: Map<String, Double>? = null
+    val priceBySize: Map<String, Double>? = null,
+    val visible: Boolean = true
 )
 
-fun ProductDto.toPizzaItem(context: Context): PizzaItem {
-    val imageResId = context.resources.getIdentifier(imageRes, "drawable", context.packageName)
-        .takeIf { it != 0 } ?: R.drawable.ic_placeholder
-
-    val categoryEnum = toPizzaItemCategory(category)
-
+fun ProductDto.toPizzaItem(): PizzaItem {
     return PizzaItem(
         name = name,
         description = description,
-        imageRes = imageRes,
-        category = categoryEnum, // ✅ ahora sí usas el valor ya verificado
-        priceUsd = priceUsd,
-        priceBySize = priceBySize
+        imageUrl = imageUrl, // ✅ reemplaza imageRes
+        category = toPizzaItemCategory(category),
+        priceUsd = priceUsd ?: 0.0,
+        priceBySize = priceBySize ?: emptyMap(),
+        visible = visible // 👈 asegúrate de propagar el campo visible
     )
 }

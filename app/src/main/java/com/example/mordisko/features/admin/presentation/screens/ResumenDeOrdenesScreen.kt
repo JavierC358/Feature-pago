@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.screens
+package com.example.mordisko.features.admin.presentation.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn

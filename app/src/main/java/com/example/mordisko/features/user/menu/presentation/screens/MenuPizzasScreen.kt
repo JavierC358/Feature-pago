@@ -31,6 +31,8 @@ import androidx.navigation.NavController
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun MenuPizzasScreen(

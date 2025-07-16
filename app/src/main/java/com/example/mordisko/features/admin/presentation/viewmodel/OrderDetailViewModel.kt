@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.viewmodel
+package com.example.mordisko.features.admin.presentation.viewmodel
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

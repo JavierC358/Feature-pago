@@ -43,11 +43,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.mordisko.features.user.cart.domain.model.CartItem
 import com.example.mordisko.features.user.cart.domain.model.SelectedExtra
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
@@ -87,11 +89,6 @@ fun PizzaDetailScreen(
         PizzaItemCategory.EXTRAS
     )
 
-    val context = LocalContext.current
-    val imageResId = remember(pizza.imageRes) {
-        context.resources.getIdentifier(pizza.imageRes, "drawable", context.packageName)
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -122,17 +119,13 @@ fun PizzaDetailScreen(
 
             Spacer(modifier = Modifier.height(7.dp))
 
-            val context = LocalContext.current
-            val imageId = remember(pizza.imageRes) {
-                context.resources.getIdentifier(pizza.imageRes, "drawable", context.packageName)
-            }
-
-            Image(
-                painter = painterResource(id = imageId),
+            AsyncImage(
+                model = pizza.imageUrl,
                 contentDescription = pizza.name,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
+                    .height(180.dp),
+                contentScale = ContentScale.Crop
             )
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -241,7 +234,7 @@ fun PizzaDetailScreen(
                             name = pizza.name,
                             size = selectedSize,
                             quantity = quantity,
-                            imageRes = pizza.imageRes,
+                            imageUrl = pizza.imageUrl,
                             priceUsd = unitPrice,
                             extras = selectedExtras
                         )

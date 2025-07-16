@@ -1,7 +1,6 @@
 package com.example.mordisko.features.user.cart.presentation
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,12 +44,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -152,13 +151,11 @@ fun CartScreen(
                             .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val context = LocalContext.current
-                        val imageResId = context.resources.getIdentifier(item.imageRes, "drawable", context.packageName)
-
-                        Image(
-                            painter = painterResource(id = imageResId),
+                        AsyncImage(
+                            model = item.imageUrl,
                             contentDescription = item.name,
-                            modifier = Modifier.size(80.dp) // Puedes ajustar el tamaño si lo deseas
+                            modifier = Modifier.size(80.dp),
+                            contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(10.dp))
 

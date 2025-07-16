@@ -1,7 +1,6 @@
 package com.example.mordisko.navigation
 
 import android.content.Intent
-import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -14,7 +13,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -28,13 +26,27 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.navArgument
 import com.example.mordisko.core.navigation.Routes
-import com.example.mordisko.features.admin.screens.AdminDashboardScreen
-import com.example.mordisko.features.admin.screens.AdminResumenPedidosScreen
-import com.example.mordisko.features.admin.screens.AdminVerificacionesScreen
-import com.example.mordisko.features.admin.screens.OrderDetailScreen
-import com.example.mordisko.features.admin.screens.ResumenDeOrdenesScreen
-import com.example.mordisko.features.admin.viewmodel.OrderDetailViewModel
+import com.example.mordisko.core.navigation.Routes.ACTUALIZAR_IMAGENES_SCREEN
+import com.example.mordisko.core.navigation.Routes.EDIT_PRICES_SCREEN
+import com.example.mordisko.core.navigation.Routes.GESTIONAR_PRODUCTOS_SCREEN
+import com.example.mordisko.core.navigation.Routes.REPORTES_FECHA_SCREEN
+import com.example.mordisko.core.navigation.Routes.VERIFICAR_ORDENES_SCREEN
+import com.example.mordisko.core.navigation.Routes.crearProductoRoute
+import com.example.mordisko.features.admin.presentation.screens.ActualizarImagenesScreen
+import com.example.mordisko.features.admin.presentation.screens.ActualizarTasaScreen
+import com.example.mordisko.features.admin.presentation.screens.AdminDashboardScreen
+import com.example.mordisko.features.admin.presentation.screens.AdminResumenPedidosScreen
+import com.example.mordisko.features.admin.presentation.screens.AdminVerificacionesScreen
+import com.example.mordisko.features.admin.presentation.screens.CrearProductoScreen
+import com.example.mordisko.features.admin.presentation.screens.EditPricesScreen
+import com.example.mordisko.features.admin.presentation.screens.EditarDescripcionScreen
+import com.example.mordisko.features.admin.presentation.screens.EditarPagoMovilScreen
+import com.example.mordisko.features.admin.presentation.screens.GestionarProductosScreen
+import com.example.mordisko.features.admin.presentation.screens.OrderDetailScreen
+import com.example.mordisko.features.admin.presentation.screens.ResumenDeOrdenesScreen
+import com.example.mordisko.features.admin.presentation.viewmodel.OrderDetailViewModel
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
+import com.example.mordisko.features.user.authentication.presentation.login.ElegirRolScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
 import com.example.mordisko.features.user.authentication.presentation.login.LoginScreen
 import com.example.mordisko.features.user.authentication.presentation.login.RegisterScreen
@@ -103,13 +115,14 @@ fun AppNavigation(
 
             composable(Routes.Login) {
                 LoginScreen(
+                    navController = navController, // ✅ agrega esto
                     onLoginSuccess = {
                         navController.navigate(Routes.Home) {
                             popUpTo(Routes.Login) { inclusive = true }
                         }
                     },
                     onNavigateToAdminPanel = {
-                        navController.navigate(Routes.AdminVerificaciones) {
+                        navController.navigate("elegir_rol") { // ✅ cambia a elegir_rol si lo deseas
                             popUpTo(Routes.Login) { inclusive = true }
                         }
                     },
@@ -144,6 +157,21 @@ fun AppNavigation(
                     onBackToLogin = {
                         navController.navigate(Routes.Login) {
                             popUpTo(Routes.ForgotPassword) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            composable("elegir_rol") {
+                ElegirRolScreen(
+                    onClienteSelected = {
+                        navController.navigate(Routes.Home) {
+                            popUpTo("elegir_rol") { inclusive = true }
+                        }
+                    },
+                    onAdminSelected = {
+                        navController.navigate(Routes.AdminDashboard.route) {
+                            popUpTo("elegir_rol") { inclusive = true }
                         }
                     }
                 )
@@ -270,21 +298,53 @@ fun AppNavigation(
                 AdminVerificacionesScreen(navController = navController)
             }
 
-            composable("admin_dashboard") {
+            composable(Routes.AdminDashboard.route) {
                 AdminDashboardScreen(
                     onNavigateToVerificaciones = {
-                        navController.navigate(Routes.AdminVerificaciones)
+                        navController.navigate(VERIFICAR_ORDENES_SCREEN)
                     },
                     onNavigateToResumen = {
-                        navController.navigate("resumen_admin_screen")
+                        navController.navigate(REPORTES_FECHA_SCREEN)
                     },
+                    onNavigateToEditPrices = {
+                        navController.navigate(EDIT_PRICES_SCREEN)
+                    },
+                    onNavigateToActualizarImagenes = {
+                        navController.navigate(ACTUALIZAR_IMAGENES_SCREEN)
+                    },
+                    onNavigateToActualizarTasa = {
+                        navController.navigate("actualizar_tasa") // ✅ Ruta para editar descripción
+                    },
+
+                    onNavigateToEditarDescripcion = {
+                        navController.navigate("editar_descripcion") // ✅ Ruta para editar descripción
+                    },
+                    onNavigateToEditarPagoMovil = {
+                        navController.navigate("editar_pago_movil") // ✅ Ruta para editar datos de pago
+                    },
+
+                    onNavigateToGestionarProductos = {
+                        navController.navigate(GESTIONAR_PRODUCTOS_SCREEN) },
+
+                    onNavigateToCrearProducto = {
+                        navController.navigate("crear_producto") }, // ✅ AQUÍ ESTÁ
+
                     onLogout = {
                         navController.navigate(Routes.Login) {
-                            popUpTo("admin_dashboard") { inclusive = true }
+                            popUpTo(Routes.AdminDashboard.route) { inclusive = true }
                         }
                     }
                 )
             }
+
+            composable(EDIT_PRICES_SCREEN) {
+                EditPricesScreen(
+                    onBack = {
+                        navController.popBackStack()
+                    }
+                )
+            }
+
 
             composable("pedido_verificado") {
                 PedidoVerificadoScreen(
@@ -302,17 +362,10 @@ fun AppNavigation(
                 val viewModel: OrderDetailViewModel = hiltViewModel()
                 val orderState by viewModel.order.collectAsState()
 
-                LaunchedEffect(orderNumber) {
-                    Log.d("Pantalla", "OrderNumber recibido: $orderNumber")
-                    viewModel.loadOrder(orderNumber)
-                }
-
-                orderState?.let { order ->
-                    OrderDetailScreen(
-                        navController = navController,
-                        orderNumber = orderNumber
-                    )
-                }
+                OrderDetailScreen(
+                    navController = navController,
+                    orderNumber = orderNumber
+                )
             }
 
             composable("resumen_screen/{desde}/{hasta}") { backStackEntry ->
@@ -345,7 +398,39 @@ fun AppNavigation(
                 MenuPizzasScreen(
                     navController = navController,
                     category = category,
-                    cartViewModel = hiltViewModel()
+                    cartViewModel = cartViewModel
+                )
+            }
+
+            composable("actualizar_imagenes") {
+                ActualizarImagenesScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable("actualizar_tasa") {
+                ActualizarTasaScreen(navController)
+            }
+
+            composable("editar_descripcion") {
+                EditarDescripcionScreen(navController)
+            }
+
+            composable(Routes.EditarPagoMovil) {
+                EditarPagoMovilScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(GESTIONAR_PRODUCTOS_SCREEN) {
+                GestionarProductosScreen(
+                    onBack = { navController.popBackStack() }
+                )
+            }
+
+            composable(crearProductoRoute) {
+                CrearProductoScreen(
+                    onBack = { navController.popBackStack() }
                 )
             }
 

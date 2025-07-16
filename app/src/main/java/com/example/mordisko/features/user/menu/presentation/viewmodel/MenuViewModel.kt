@@ -44,7 +44,7 @@ class MenuViewModel @Inject constructor(
             repository.getAllProducts()
                 .catch { e -> e.printStackTrace() }
                 .collectLatest { productos ->
-                    _products.value = productos
+                    _products.value = productos.filter { it.visible }
                 }
         }
     }

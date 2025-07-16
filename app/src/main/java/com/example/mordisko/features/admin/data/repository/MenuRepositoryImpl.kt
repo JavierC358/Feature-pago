@@ -5,7 +5,6 @@ import android.util.Log
 import com.example.mordisko.features.admin.data.model.ProductDto
 import com.example.mordisko.features.admin.data.model.toPizzaItem
 import com.example.mordisko.features.user.menu.domain.model.PizzaItem
-import com.example.mordisko.features.user.menu.domain.model.toPizzaItem
 import com.example.mordisko.features.user.menu.domain.repository.MenuRepository
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -29,7 +28,9 @@ class MenuRepositoryImpl @Inject constructor(
 
                 val products = snapshot?.documents?.mapNotNull { doc ->
                     try {
-                        doc.toObject(ProductDto::class.java)?.toPizzaItem(context)
+                        doc.toObject(ProductDto::class.java)
+                            ?.copy(id = doc.id)
+                            ?.toPizzaItem()
                     } catch (e: Exception) {
                         Log.e("FirestoreParse", "❌ Documento ignorado: ${doc.id} - ${e.message}")
                         null

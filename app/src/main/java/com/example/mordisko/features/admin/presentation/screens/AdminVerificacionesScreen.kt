@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.screens
+package com.example.mordisko.features.admin.presentation.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,7 +15,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mordisko.core.navigation.Routes
-import com.example.mordisko.features.admin.viewmodel.AdminViewModel
+import com.example.mordisko.features.admin.presentation.viewmodel.AdminViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -10,8 +10,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,13 +28,18 @@ fun OrderSummaryScreen(
     navController: NavController,
     onBack: () -> Unit
 ) {
+
     val context = LocalContext.current
-    val cartItems = cartViewModel.cartItems.collectAsState().value
-    val deliveryOption = cartViewModel.deliveryOption.collectAsState().value
-    val address = cartViewModel.secondaryAddress.collectAsState().value
-    val reference = cartViewModel.addressReference.collectAsState().value
-    val paymentMethod = cartViewModel.paymentMethod.collectAsState().value
-    val exchangeRate = 100.0
+    val cartItems by cartViewModel.cartItems.collectAsState()
+    val deliveryOption by cartViewModel.deliveryOption.collectAsState()
+    val address by cartViewModel.secondaryAddress.collectAsState()
+    val reference by cartViewModel.addressReference.collectAsState()
+    val paymentMethod by cartViewModel.paymentMethod.collectAsState()
+    val exchangeRate by cartViewModel.exchangeRate.collectAsState()
+
+    LaunchedEffect(Unit) {
+        cartViewModel.cargarExchangeRateDesdeFirestore()
+    }
 
     val deliveryCostUsd = when (deliveryOption) {
         DeliveryOption.Moto -> 2.0
@@ -45,6 +49,12 @@ fun OrderSummaryScreen(
     val subtotalUsd = cartItems.sumOf { it.priceUsd * it.quantity }
     val totalUsd = subtotalUsd + deliveryCostUsd
     val totalBs = totalUsd * exchangeRate
+
+    LaunchedEffect(Unit) {
+        if (exchangeRate == 0.0) {
+            cartViewModel.loadExchangeRate()
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -60,7 +70,6 @@ fun OrderSummaryScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 🔙 Botón Volver
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -72,14 +81,12 @@ fun OrderSummaryScreen(
                 Text("Volver", fontSize = 16.sp)
             }
 
-            // 🧾 Título
             Text(
                 text = "Resumen del pedido",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold
             )
 
-            // 🧾 Productos
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -96,7 +103,6 @@ fun OrderSummaryScreen(
                 }
             }
 
-            // 🛵 Método de entrega
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
@@ -113,14 +119,13 @@ fun OrderSummaryScreen(
                 }
             }
 
-            // 💲 Totales y método de pago
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 elevation = CardDefaults.cardElevation(4.dp),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Tasa de cambio: Bs/$. $exchangeRate")
+                    Text("Tasa de cambio: Bs/\$. $exchangeRate")
                     Text("Total en USD: $${"%.2f".format(totalUsd)}")
                     Text("Total en Bs: Bs. ${"%.2f".format(totalBs)}", fontWeight = FontWeight.Bold)
                     Spacer(modifier = Modifier.height(8.dp))
@@ -136,7 +141,6 @@ fun OrderSummaryScreen(
                 }
             }
 
-            // ✅ Confirmar
             Button(
                 onClick = {
                     cartViewModel.placeOrder(

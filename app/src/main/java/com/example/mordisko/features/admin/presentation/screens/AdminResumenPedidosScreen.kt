@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.screens
+package com.example.mordisko.features.admin.presentation.screens
 
 import android.app.DatePickerDialog
 import android.widget.DatePicker

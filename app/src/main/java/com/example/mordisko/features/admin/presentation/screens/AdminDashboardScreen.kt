@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.screens
+package com.example.mordisko.features.admin.presentation.screens
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +43,13 @@ import com.example.mordisko.features.admin.data.subirProductosAFirestore
 fun AdminDashboardScreen(
     onNavigateToVerificaciones: () -> Unit,
     onNavigateToResumen: () -> Unit,
+    onNavigateToEditPrices: () -> Unit,
+    onNavigateToActualizarImagenes: () -> Unit,
+    onNavigateToActualizarTasa: () -> Unit,
+    onNavigateToEditarDescripcion: () -> Unit,
+    onNavigateToEditarPagoMovil: () -> Unit,
+    onNavigateToGestionarProductos: () -> Unit,
+    onNavigateToCrearProducto: () -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -67,18 +74,33 @@ fun AdminDashboardScreen(
             )
             DashboardRow(
                 items = listOf(
-                    DashboardItem("Cambiar Precios", Icons.Default.AttachMoney) { /* TODO */ },
-                    DashboardItem("Actualizar Imágenes", Icons.Default.Image) { /* TODO */ }
+                    DashboardItem("Cambiar Precios", Icons.Default.AttachMoney, onNavigateToEditPrices),
+                    DashboardItem("Actualizar Imágenes", Icons.Default.Image, onNavigateToActualizarImagenes),
                 )
             )
             DashboardRow(
                 items = listOf(
-                    DashboardItem("Gestionar Menú", Icons.Default.LocalPizza) { /* TODO */ },
-                    DashboardItem("Configuraciones", Icons.Default.Settings) { /* TODO */ }
+                    DashboardItem("Cambiar Tasa $/Bs", Icons.Default.LocalPizza) { onNavigateToActualizarTasa() },
+
+                    DashboardItem("Gestionar Productos", Icons.Default.Settings) {onNavigateToGestionarProductos()}
                 )
             )
 
-            Spacer(modifier = Modifier.height(32.dp))
+            DashboardRow(
+                items = listOf(
+                    DashboardItem("Editar descripción productos", Icons.Default.AttachMoney, onNavigateToEditarDescripcion),
+                    DashboardItem("Editar pago móvil", Icons.Default.Image, onNavigateToEditarPagoMovil)
+                )
+            )
+
+            DashboardRow(
+                items = listOf(
+                    DashboardItem("Crear Producto", Icons.Default.LocalPizza, onNavigateToCrearProducto),
+                    DashboardItem("Reserva", Icons.Default.Settings, { })
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
 
             Button(
                 onClick = onLogout,
@@ -108,7 +130,7 @@ fun DashboardRow(items: List<DashboardItem>) {
             Card(
                 modifier = Modifier
                     .weight(1f)
-                    .height(100.dp)
+                    .height(85.dp)
                     .clickable { item.onClick() },
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)

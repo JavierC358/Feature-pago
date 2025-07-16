@@ -47,13 +47,14 @@ class LoginViewModel @Inject constructor(
         viewModelScope.launch {
             val result = loginUseCase(email, password)
             if (result) {
-                _loginSuccess.value = true
                 _loginError.value = null
 
                 val role = loginUseCase.getUserRole()
                 _userRole.value = role ?: "cliente"
 
+                _loginSuccess.value = true // ✅ ahora va después
                 onSuccess()
+
             } else {
                 _loginError.value = "Correo o contraseña incorrectos"
                 _loginSuccess.value = false

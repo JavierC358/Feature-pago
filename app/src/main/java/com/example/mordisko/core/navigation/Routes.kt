@@ -24,6 +24,14 @@ object Routes {
 
     // Detalle de pedido (admin)
     const val OrderDetail = "order_detail/{orderNumber}"
+
+    const val EDIT_PRICES_SCREEN = "edit_prices"
+    const val VERIFICAR_ORDENES_SCREEN = "admin_verificaciones"
+    const val REPORTES_FECHA_SCREEN = "resumen_admin_screen"
+    const val ACTUALIZAR_IMAGENES_SCREEN = "actualizar_imagenes"
+    const val EditarPagoMovil = "editar_pago_movil"
+    const val GESTIONAR_PRODUCTOS_SCREEN = "gestionar_productos"
+    const val crearProductoRoute = "crear_producto"
     fun orderDetailRoute(orderNumber: String) = "order_detail/$orderNumber"
 
     // Función para navegación a pantalla de verificación de pago
@@ -34,5 +42,9 @@ object Routes {
     // Función para navegar a pantalla de estado de pedido con monto total
     fun orderStatusRoute(orderNumber: String, montoTotal: Double): String {
         return "order_status/$orderNumber/$montoTotal"
+    }
+
+    object AdminDashboard {
+        const val route = "admin_dashboard"
     }
 }

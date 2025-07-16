@@ -1,4 +1,4 @@
-package com.example.mordisko.features.admin.screens
+package com.example.mordisko.features.admin.presentation.screens
 
 import android.content.Intent
 import android.net.Uri
@@ -22,8 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mordisko.features.user.cart.domain.model.CartItem
-import com.example.mordisko.features.admin.viewmodel.OrderDetailViewModel
-import com.example.mordisko.features.user.cart.domain.model.OrderModel
+import com.example.mordisko.features.admin.presentation.viewmodel.OrderDetailViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

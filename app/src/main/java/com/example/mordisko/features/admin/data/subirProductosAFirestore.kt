@@ -13,7 +13,7 @@ fun subirProductosAFirestore(context: Context, productos: List<PizzaItem>) {
         val data = hashMapOf(
             "name" to item.name,
             "description" to item.description,
-            "imageRes" to item.imageRes,
+            "imageUrl" to item.imageUrl,
             "category" to item.category.name,
             "priceBySize" to item.priceBySize,
             "priceUsd" to item.priceUsd

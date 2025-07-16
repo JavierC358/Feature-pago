@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 
 enum class PaymentMethod {
     PagoMovil, Efectivo, PuntoDeVenta
@@ -27,6 +29,7 @@ fun PaymentMethodScreen(
     onContinue: (PaymentMethod) -> Unit
 ) {
     var selectedMethod by remember { mutableStateOf<PaymentMethod?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     Box(
         modifier = Modifier
@@ -88,7 +91,10 @@ fun PaymentMethodScreen(
                 onClick = {
                     selectedMethod?.let {
                         cartViewModel.setPaymentMethod(it)
-                        onContinue(it)
+                        coroutineScope.launch {
+                            kotlinx.coroutines.delay(50) // 50 ms o 1 frame
+                            onContinue(it)
+                        }
                     }
                 },
                 enabled = selectedMethod != null,

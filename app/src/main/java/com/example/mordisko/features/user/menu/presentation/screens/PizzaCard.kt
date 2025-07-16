@@ -17,7 +17,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.example.mordisko.features.user.menu.domain.model.PizzaItem
+import com.example.mordisko.R
 
 @Composable
 fun PizzaCard(
@@ -27,7 +29,6 @@ fun PizzaCard(
     paddingHorizontal: Dp = 0.dp
 ) {
     val context = LocalContext.current
-    val imageResId = context.resources.getIdentifier(pizza.imageRes, "drawable", context.packageName)
 
     Card(
         modifier = Modifier
@@ -54,13 +55,14 @@ fun PizzaCard(
             Spacer(modifier = Modifier.height(4.dp))
 
             // 🍕 Imagen debajo del nombre
-            Image(
-                painter = painterResource(id = imageResId),
+            AsyncImage(
+                model = pizza.imageUrl,
                 contentDescription = pizza.name,
-                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .width(120.dp)
-                    .height(120.dp)
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .padding(4.dp),
+                contentScale = ContentScale.Crop
             )
         }
     }
