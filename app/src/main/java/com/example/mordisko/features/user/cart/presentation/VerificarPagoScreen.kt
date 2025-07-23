@@ -2,7 +2,9 @@ package com.example.mordisko.features.user.cart.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,6 +32,14 @@ fun VerificarPagoScreen(
     var monto by remember { mutableStateOf("") }
     var referencia by remember { mutableStateOf("") }
     var telefono by remember { mutableStateOf("") }
+
+    var deseaFactura by remember { mutableStateOf(false) }
+    var razonSocial by remember { mutableStateOf("") }
+    var rif by remember { mutableStateOf("") }
+    var direccion by remember { mutableStateOf("") }
+
+    val puedeVerificar = monto.isNotBlank() && referencia.length == 4 && telefono.length >= 11 &&
+            (!deseaFactura || (razonSocial.isNotBlank() && rif.isNotBlank() && direccion.isNotBlank()))
 
     // Mostrar Snackbar de éxito
     LaunchedEffect(state.isSuccess) {
@@ -64,48 +74,97 @@ fun VerificarPagoScreen(
             contentAlignment = Alignment.TopCenter
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxSize()
             ) {
-                Text(
-                    text = "Suministra la información exacta de tu pago",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
+                Column(
+                    modifier = Modifier
+                        .weight(1f)
+                        .verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Suministra la información exacta de tu pago",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = orange
+                    )
 
-                OutlinedTextField(
-                    value = monto,
-                    onValueChange = { monto = it },
-                    label = { Text("Monto pagado (Bs.)") },
-                    placeholder = { Text("Ej: 109.50") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    OutlinedTextField(
+                        value = monto,
+                        onValueChange = { monto = it },
+                        label = { Text("Monto pagado (Bs.)") },
+                        placeholder = { Text("Ej: 109.50") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                OutlinedTextField(
-                    value = referencia,
-                    onValueChange = { referencia = it },
-                    label = { Text("Últimos 4 dígitos de la referencia") },
-                    placeholder = { Text("Ej: 4582") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    OutlinedTextField(
+                        value = referencia,
+                        onValueChange = { referencia = it },
+                        label = { Text("Últimos 4 dígitos de la referencia") },
+                        placeholder = { Text("Ej: 4582") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                OutlinedTextField(
-                    value = telefono,
-                    onValueChange = { telefono = it },
-                    label = { Text("Teléfono desde donde pagaste") },
-                    placeholder = { Text("Ej: 04141234567") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    OutlinedTextField(
+                        value = telefono,
+                        onValueChange = { telefono = it },
+                        label = { Text("Teléfono desde donde pagaste") },
+                        placeholder = { Text("Ej: 04141234567") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Checkbox(
+                            checked = deseaFactura,
+                            onCheckedChange = { deseaFactura = it },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = orange,
+                                uncheckedColor = orange
+                            )
+                        )
+                        Text("Solo si deseas factura")
+                    }
 
+                    if (deseaFactura) {
+                        OutlinedTextField(
+                            value = razonSocial,
+                            onValueChange = { razonSocial = it },
+                            label = { Text("Razón social") },
+                            placeholder = { Text("Ej: Inversiones Mordisko C.A.") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        OutlinedTextField(
+                            value = rif,
+                            onValueChange = { rif = it },
+                            label = { Text("Rif") },
+                            placeholder = { Text("Ej: J-12345678-9") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        OutlinedTextField(
+                            value = direccion,
+                            onValueChange = { direccion = it },
+                            label = { Text("Dirección") },
+                            placeholder = { Text("Ej: Av. Principal, Local 2...") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                // ✅ Botones siempre visibles
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     OutlinedButton(
@@ -118,19 +177,20 @@ fun VerificarPagoScreen(
 
                     Button(
                         onClick = {
-                            if (monto.isNotBlank() && referencia.length == 4 && telefono.length >= 11) {
-                                viewModel.submitPaymentVerification(
-                                    orderNumber,
-                                    monto,
-                                    referencia,
-                                    telefono
-                                )
-                            }
+                            viewModel.submitPaymentVerification(
+                                orderNumber,
+                                monto,
+                                referencia,
+                                telefono,
+                                razonSocial.takeIf { deseaFactura },
+                                rif.takeIf { deseaFactura },
+                                direccion.takeIf { deseaFactura }
+                            )
                         },
+                        enabled = puedeVerificar && !state.isLoading,
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.buttonColors(containerColor = orange),
-                        shape = RoundedCornerShape(12.dp),
-                        enabled = !state.isLoading
+                        shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(if (state.isLoading) "Enviando..." else "Verificar")
                     }

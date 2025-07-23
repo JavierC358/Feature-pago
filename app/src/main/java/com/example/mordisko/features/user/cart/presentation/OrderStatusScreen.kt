@@ -43,13 +43,14 @@ fun OrderStatusScreen(
     val paymentStatus by viewModel.paymentStatus.collectAsState()
     val pagoMovilData = viewModel.pagoMovilData.value
 
-    // Escuchar estado del pago
+    val orange = Color(0xFFE05B13)
+    val lightOrange = Color(0xFFFFA726)
+
     LaunchedEffect(Unit) {
         viewModel.monitorPaymentStatus(orderNumber)
-        viewModel.cargarPagoMovil() // ✅ Cargar datos al entrar
+        viewModel.cargarPagoMovil()
     }
 
-    // Navegar si fue verificado
     LaunchedEffect(paymentStatus) {
         if (paymentStatus == "verificado") {
             navController.navigate("pedido_verificado") {
@@ -63,7 +64,13 @@ fun OrderStatusScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Estado del Pago") }
+                title = {
+                    Text(
+                        "Estado del Pago",
+                        color = orange,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             )
         }
     ) { padding ->
@@ -76,49 +83,55 @@ fun OrderStatusScreen(
         ) {
             Spacer(modifier = Modifier.height(16.dp))
 
+            // ✅ Color corregido para número de orden
             Text(
                 text = "Orden N°: $orderNumber",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = orange
             )
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // ✅ Tarjeta sin color translúcido y textos en blanco
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFAFAFA)),
+                colors = CardDefaults.cardColors(containerColor = lightOrange),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Column(
-                    modifier = Modifier
-                        .padding(16.dp)
-                ) {
+                Column(modifier = Modifier.padding(16.dp)) {
                     Text(
                         text = "💳 Monto a pagar:",
                         fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
                     )
                     Text(
                         text = "Bs $montoTotal",
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4CAF50)
+                        color = Color.White
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "🏦 Banco: ${pagoMovilData.banco}\n" +
-                                "📲 Pago móvil: ${pagoMovilData.telefono}\n" +
-                                "🆔 CI/RIF: ${pagoMovilData.cedula}",
-                        fontSize = 14.sp
+                        text = """
+                            🏦 Banco: ${pagoMovilData.banco}
+                            📲 Pago móvil: ${pagoMovilData.telefono}
+                            🆔 CI/RIF: ${pagoMovilData.cedula}
+                        """.trimIndent(),
+                        fontSize = 14.sp,
+                        color = Color.White
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
                         text = "⏳ Estado actual: ${paymentStatus.uppercase()}",
-                        fontWeight = FontWeight.Medium
+                        fontWeight = FontWeight.Medium,
+                        color = Color.White
                     )
                 }
             }
@@ -127,21 +140,26 @@ fun OrderStatusScreen(
 
             Button(
                 onClick = onComprobarPago,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = orange)
             ) {
-                Text("Comprobar Pago")
+                Text("Comprobar Pago", fontWeight = FontWeight.Bold, color = Color.White)
             }
 
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
                 onClick = onCancelar,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Red)
             ) {
-                Text("Cancelar Pedido")
+                Text("Cancelar Pedido", fontWeight = FontWeight.Bold)
             }
         }
     }

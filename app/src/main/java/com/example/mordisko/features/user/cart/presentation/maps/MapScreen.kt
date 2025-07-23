@@ -35,6 +35,10 @@ fun MapScreen(
     val markerState = rememberMarkerState()
     var addressText by remember { mutableStateOf("Ubicación no determinada") }
 
+    var mapReady by remember { mutableStateOf(false) } // ✅ Evita mostrar mapa sin ubicación
+
+    val defaultLatLng = LatLng(10.4806, -66.9036) // Caracas fallback
+
     // Solicitar permisos
     LaunchedEffect(Unit) {
         if (!locationPermissionState.status.isGranted) {
@@ -42,9 +46,9 @@ fun MapScreen(
         }
     }
 
-    // Obtener ubicación actual si hay permisos
+    // Obtener ubicación actual y mover cámara
     LaunchedEffect(locationPermissionState.status) {
-        if (locationPermissionState.status.isGranted) {
+        if (locationPermissionState.status.isGranted && !mapReady) {
             val fusedClient = LocationServices.getFusedLocationProviderClient(context)
 
             try {
@@ -55,14 +59,17 @@ fun MapScreen(
 
                 if (permissionGranted) {
                     val result = fusedClient.lastLocation.await()
-                    result?.let {
+                    val latLng = result?.let {
                         location = it
-                        val latLng = LatLng(it.latitude, it.longitude)
-                        markerState.position = latLng
-                        cameraPositionState.animate(
-                            update = CameraUpdateFactory.newLatLngZoom(latLng, 15f)
-                        )
-                    }
+                        LatLng(it.latitude, it.longitude)
+                    } ?: defaultLatLng
+
+                    markerState.position = latLng
+                    cameraPositionState.position = CameraPositionState(
+                        position = com.google.android.gms.maps.model.CameraPosition.fromLatLngZoom(latLng, 17f)
+                    ).position
+
+                    mapReady = true // ✅ Solo se activa cuando hay LatLng
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -83,7 +90,7 @@ fun MapScreen(
             Text("Volver")
         }
 
-        if (location != null) {
+        if (mapReady) {
             GoogleMap(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -103,7 +110,7 @@ fun MapScreen(
             )
         } else {
             Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                Text("Esperando ubicación...")
+                Text("Cargando mapa...")
             }
         }
 
@@ -121,7 +128,7 @@ fun MapScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(16.dp),
-            enabled = location != null
+            enabled = mapReady
         ) {
             Text("Confirmar ubicación")
         }

@@ -22,6 +22,7 @@ import com.example.mordisko.R
 fun SplashScreen(
     viewModel: SplashViewModel = hiltViewModel(),
     onNavigateToLogin: () -> Unit,
+    onNavigateToHorario: () -> Unit,
     onNavigateToHome: () -> Unit,
     onNavigateToAdminPanel: () -> Unit // ✅ Se mantiene
 ) {
@@ -32,6 +33,10 @@ fun SplashScreen(
             is SplashNavigation.Login -> {
                 Log.d("SplashScreen", "Navegando a Login")
                 onNavigateToLogin()
+            }
+            is SplashNavigation.Horario -> {
+                Log.d("NAV_TEST", "Entrando al bloque Horario en SplashScreen")
+                onNavigateToHorario()
             }
 
             is SplashNavigation.Home -> {
@@ -56,7 +61,7 @@ fun SplashScreen(
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Image(
-                painter = painterResource(id = R.drawable.ic_logo_background),
+                painter = painterResource(id = R.drawable.logo),
                 contentDescription = "",
                 Modifier.size(450.dp)
             )

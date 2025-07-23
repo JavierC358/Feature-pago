@@ -62,7 +62,7 @@ fun PizzaCard(
                     .fillMaxWidth()
                     .height(140.dp)
                     .padding(4.dp),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit
             )
         }
     }

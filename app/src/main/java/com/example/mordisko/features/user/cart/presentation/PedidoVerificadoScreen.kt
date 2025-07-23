@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -12,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ fun PedidoVerificadoScreen(
     }
 
     val scope = rememberCoroutineScope()
+    val orange = Color(0xFFE05B13)
 
     Scaffold { padding ->
         Column(
@@ -55,7 +58,8 @@ fun PedidoVerificadoScreen(
             Text(
                 text = "¡Pago Verificado!",
                 fontSize = 42.sp,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = orange
             )
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -68,7 +72,7 @@ fun PedidoVerificadoScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
-                text = "📦 En breve recibirás tu pedido o puedes retirarlo en tienda.",
+                text = "📦 En breve recibirás tu pedido o puedes retirarlo en tienda; si asi lo seleccionaste.",
                 fontSize = 14.sp
             )
 
@@ -86,9 +90,10 @@ fun PedidoVerificadoScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(50.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = orange)
             ) {
-                Text("Volver al Inicio")
+                Text("Volver al Inicio", color = Color.White) // ✅ Texto blanco
             }
         }
     }

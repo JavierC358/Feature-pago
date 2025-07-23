@@ -28,7 +28,6 @@ fun OrderSummaryScreen(
     navController: NavController,
     onBack: () -> Unit
 ) {
-
     val context = LocalContext.current
     val cartItems by cartViewModel.cartItems.collectAsState()
     val deliveryOption by cartViewModel.deliveryOption.collectAsState()
@@ -37,8 +36,14 @@ fun OrderSummaryScreen(
     val paymentMethod by cartViewModel.paymentMethod.collectAsState()
     val exchangeRate by cartViewModel.exchangeRate.collectAsState()
 
+    val orange = Color(0xFFE05B13)
+    val lightOrange = Color(0xFFFFA726)
+
     LaunchedEffect(Unit) {
         cartViewModel.cargarExchangeRateDesdeFirestore()
+        if (exchangeRate == 0.0) {
+            cartViewModel.loadExchangeRate()
+        }
     }
 
     val deliveryCostUsd = when (deliveryOption) {
@@ -50,119 +55,136 @@ fun OrderSummaryScreen(
     val totalUsd = subtotalUsd + deliveryCostUsd
     val totalBs = totalUsd * exchangeRate
 
-    LaunchedEffect(Unit) {
-        if (exchangeRate == 0.0) {
-            cartViewModel.loadExchangeRate()
-        }
-    }
-
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.White)
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .padding(16.dp)
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Column(
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .clickable { onBack() }
         ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onBack() }
-            ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Volver", fontSize = 16.sp)
+            Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = orange)
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Volver", fontSize = 16.sp, color = orange)
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = "Resumen del pedido",
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = orange
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Tarjeta de productos
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(6.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = lightOrange)
+        ) {
+            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                cartItems.forEach { item ->
+                    Text("- ${item.name}: ${item.quantity} x $${item.priceUsd}", color = Color.White)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val orderComment by cartViewModel.orderComment.collectAsState()
+                if (orderComment.isNotBlank()) {
+                    Text("📝 Nota del cliente:", fontWeight = FontWeight.Bold, color = Color.White)
+                    Text(orderComment, color = Color.White)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                Divider(color = Color.White.copy(alpha = 0.5f))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("Subtotal: $${"%.2f".format(subtotalUsd)}", fontWeight = FontWeight.Bold, color = Color.White)
             }
+        }
 
-            Text(
-                text = "Resumen del pedido",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
+        Spacer(modifier = Modifier.height(16.dp))
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    cartItems.forEach { item ->
-                        Text("- ${item.name}: ${item.quantity} x $${item.priceUsd}")
+        // Tarjeta de envío
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(6.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = lightOrange)
+        ) {
+            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                Text("Método de entrega: ${deliveryOption?.name ?: "No seleccionado"}", color = Color.White)
+                if (deliveryCostUsd > 0) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text("Costo de entrega: $${"%.2f".format(deliveryCostUsd)}", color = Color.White)
+                    Text("Dirección: $address", color = Color.White)
+                    if (reference.isNotBlank()) {
+                        Text("Referencia: $reference", color = Color.White)
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Divider()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("Subtotal: $${"%.2f".format(subtotalUsd)}", fontWeight = FontWeight.Bold)
                 }
             }
+        }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Método de entrega: ${deliveryOption?.name ?: "No seleccionado"}")
-                    if (deliveryCostUsd > 0) {
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text("Costo de entrega: $${"%.2f".format(deliveryCostUsd)}")
-                        Text("Dirección: $address")
-                        if (reference.isNotBlank()) Text("Referencia: $reference")
-                    }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Tarjeta de totales
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            elevation = CardDefaults.cardElevation(6.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = lightOrange)
+        ) {
+            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+                Text("Tasa de cambio: Bs/\$. $exchangeRate", color = Color.White)
+                Text("Total en USD: $${"%.2f".format(totalUsd)}", color = Color.White)
+                Text("Total en Bs: Bs. ${"%.2f".format(totalBs)}", fontWeight = FontWeight.Bold, color = Color.White)
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                val metodoPagoTexto = when (paymentMethod) {
+                    PaymentMethod.PagoMovil -> "Pago móvil"
+                    PaymentMethod.PuntoDeVenta -> "Punto de venta"
+                    PaymentMethod.Efectivo -> "Efectivo"
+                    else -> "No seleccionado"
                 }
+
+                Text("Método de pago: $metodoPagoTexto", color = Color.White)
             }
+        }
 
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                elevation = CardDefaults.cardElevation(4.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Tasa de cambio: Bs/\$. $exchangeRate")
-                    Text("Total en USD: $${"%.2f".format(totalUsd)}")
-                    Text("Total en Bs: Bs. ${"%.2f".format(totalBs)}", fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
-                    val metodoPagoTexto = when (paymentMethod) {
-                        PaymentMethod.PagoMovil -> "Pago móvil"
-                        PaymentMethod.PuntoDeVenta -> "Punto de venta"
-                        PaymentMethod.Efectivo -> "Efectivo"
-                        else -> "No seleccionado"
-                    }
-
-                    Text("Método de pago: $metodoPagoTexto")
-                }
-            }
-
-            Button(
-                onClick = {
-                    cartViewModel.placeOrder(
-                        exchangeRate = exchangeRate,
-                        deliveryCostUsd = deliveryCostUsd,
-                        onResult = { success, error, orderNumber ->
-                            if (success && orderNumber != null) {
-                                val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
-                                navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
-                            } else {
-                                Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
-                            }
+        Button(
+            onClick = {
+                cartViewModel.placeOrder(
+                    exchangeRate = exchangeRate,
+                    deliveryCostUsd = deliveryCostUsd,
+                    clearCartOnSuccess = false,
+                    onResult = { success, error, orderNumber ->
+                        if (success && orderNumber != null) {
+                            val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
+                            navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
+                        } else {
+                            Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                         }
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Text("Confirmar")
-            }
+                    }
+                )
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = orange)
+        ) {
+            Text("Confirmar", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
         }
     }
 }

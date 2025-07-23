@@ -38,7 +38,6 @@ fun OrderDetailScreen(
         viewModel.loadOrder(orderNumber)
     }
 
-    // Bloquear retroceso
     BackHandler(enabled = true) {}
 
     if (orderState == null) {
@@ -152,6 +151,24 @@ fun OrderDetailScreen(
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
+
+                // 🧾 Datos de Factura (si aplica)
+                if (order.deseaFactura == true) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("📄 Datos para Factura:", fontWeight = FontWeight.Bold)
+                            order.razonSocial?.let { Text("🏢 Razón Social: $it") }
+                            order.rif?.let { Text("🆔 RIF: $it") }
+                            order.direccion?.let { Text("📍 Dirección Fiscal: $it") }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
 
                 // 🧾 Productos
                 Text("🧾 Productos:", fontWeight = FontWeight.Bold, fontSize = MaterialTheme.typography.titleMedium.fontSize)

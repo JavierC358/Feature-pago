@@ -43,8 +43,15 @@ class CartViewModel @Inject constructor(
     private val _exchangeRate = MutableStateFlow(0.0)
     val exchangeRate: StateFlow<Double> = _exchangeRate
 
+    private val _orderComment = MutableStateFlow("")
+    val orderComment: StateFlow<String> = _orderComment
+
     init {
         loadExchangeRate() // ✅ Carga automática al iniciar
+    }
+
+    fun setOrderComment(comment: String) {
+        _orderComment.value = comment
     }
 
     fun setPaymentMethod(method: PaymentMethod) {

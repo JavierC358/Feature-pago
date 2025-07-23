@@ -33,7 +33,6 @@ fun LoginScreen(
     googleLauncher: ActivityResultLauncher<Intent>
 ) {
     val context = LocalContext.current
-
     val email by loginViewModel.email.collectAsState()
     val password by loginViewModel.password.collectAsState()
     val isLoginEnabled by loginViewModel.isLoginEnable.collectAsState()
@@ -46,7 +45,7 @@ fun LoginScreen(
 
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
 
-    // 👉 Navegación según éxito con Google
+    // Éxito Google
     LaunchedEffect(isSuccess) {
         if (isSuccess) {
             googleAuthViewModel.clearSuccess()
@@ -54,72 +53,80 @@ fun LoginScreen(
         }
     }
 
-    // ✅ Navegación según éxito con Email y Rol (corregida)
+    // Éxito Email + Rol
     LaunchedEffect(loginSuccess, userRole) {
         if (loginSuccess && userRole.isNotBlank()) {
             when (userRole) {
                 "admin" -> {
-                    Log.d("LoginScreen", "Rol: admin -> Navegar a ElegirRolScreen")
                     navController.navigate("elegir_rol") {
                         popUpTo(Routes.Login) { inclusive = true }
                     }
                 }
                 "cliente" -> {
-                    Log.d("LoginScreen", "Rol: cliente -> Navegar al Home")
-                    onLoginSuccess()
-                }
-                else -> {
-                    Log.w("LoginScreen", "Rol no reconocido: $userRole")
+                    Log.d("LoginScreen", "Rol: cliente -> Navegar a HorarioScreen")
+                    navController.navigate(Routes.Horario) {
+                        popUpTo(Routes.Login) { inclusive = true }
+                    }
                 }
             }
             loginViewModel.clearLoginSuccess()
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp)
+    ) {
         Column(
-            modifier = Modifier.align(Alignment.Center),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .align(Alignment.Center)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Text(
+                text = "Bienvenido a Mordisko",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { loginViewModel.onLoginChanged(it, password) },
                 label = { Text("Correo electrónico") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                singleLine = true
             )
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { loginViewModel.onLoginChanged(email, it) },
                 label = { Text("Contraseña") },
                 modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
-                    val image = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
-                    val description = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
+                    val icon = if (passwordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
+                    val desc = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña"
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                        Icon(imageVector = image, contentDescription = description)
+                        Icon(imageVector = icon, contentDescription = desc)
                     }
                 }
             )
 
-            Spacer(modifier = Modifier.height(16.dp))
-
             Button(
                 onClick = {
-                    loginViewModel.onLoginSelected(email, password) {
-                        // La navegación se gestiona en el LaunchedEffect
-                    }
+                    loginViewModel.onLoginSelected(email, password) {}
                 },
                 enabled = isLoginEnabled,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large
             ) {
                 Text("Iniciar sesión")
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
 
             TextButton(onClick = onNavigateToForgotPassword) {
                 Text("¿Olvidaste tu contraseña?")
@@ -129,7 +136,7 @@ fun LoginScreen(
                 Text("¿No tienes una cuenta? Regístrate")
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
 
             Button(
                 onClick = {
@@ -137,7 +144,8 @@ fun LoginScreen(
                     googleLauncher.launch(signInIntent)
                 },
                 enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large
             ) {
                 if (isLoading) {
                     CircularProgressIndicator(modifier = Modifier.size(20.dp))
@@ -149,16 +157,17 @@ fun LoginScreen(
             }
         }
 
-        authError?.let { errorMessage ->
+        authError?.let { error ->
             AlertDialog(
                 onDismissRequest = { googleAuthViewModel.clearError() },
                 title = { Text("Error de inicio de sesión") },
-                text = { Text(errorMessage) },
+                text = { Text(error) },
                 confirmButton = {
                     TextButton(onClick = { googleAuthViewModel.clearError() }) {
                         Text("Volver al login")
                     }
-                }
+                },
+                shape = MaterialTheme.shapes.large
             )
         }
     }

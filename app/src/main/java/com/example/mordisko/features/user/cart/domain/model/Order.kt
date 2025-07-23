@@ -15,5 +15,12 @@ data class OrderModel(
     val deliveryCostUsd: Double = 0.0,
     val totalUsd: Double = 0.0,
     val totalBs: Double = 0.0,
-    val timestamp: Timestamp = Timestamp.now()
+    val timestamp: Timestamp = Timestamp.now(),
+    val comment: String = "",
+    // 🔶 Nuevos campos para la factura
+    val deseaFactura: Boolean? = null,
+    val razonSocial: String? = null,
+    val rif: String? = null,
+    val direccion: String? = null
+    
 )

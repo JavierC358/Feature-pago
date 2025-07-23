@@ -30,6 +30,8 @@ fun PaymentMethodScreen(
 ) {
     var selectedMethod by remember { mutableStateOf<PaymentMethod?>(null) }
     val coroutineScope = rememberCoroutineScope()
+    val orange = Color(0xFFE05B13)
+    val lightOrange = Color(0xFFFFA726)
 
     Box(
         modifier = Modifier
@@ -38,61 +40,70 @@ fun PaymentMethodScreen(
             .padding(16.dp)
     ) {
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Botón volver
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable { onBack() }
             ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = orange)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Volver", fontSize = 16.sp)
+                Text("Volver", fontSize = 16.sp, color = orange)
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Título
             Text(
                 text = "Selecciona el método de pago",
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 22.sp,
+                fontWeight = FontWeight.Bold,
+                color = orange,
+                modifier = Modifier.padding(vertical = 8.dp)
             )
 
-            // Opciones de pago
+            Spacer(modifier = Modifier.height(24.dp))
+
             PaymentOptionCard(
                 icon = Icons.Default.PhoneIphone,
                 title = "Pago Móvil",
                 isSelected = selectedMethod == PaymentMethod.PagoMovil,
-                onClick = { selectedMethod = PaymentMethod.PagoMovil }
+                onClick = { selectedMethod = PaymentMethod.PagoMovil },
+                highlightColor = lightOrange
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             PaymentOptionCard(
                 icon = Icons.Default.CreditCard,
                 title = "Punto de Venta",
                 isSelected = selectedMethod == PaymentMethod.PuntoDeVenta,
-                onClick = { selectedMethod = PaymentMethod.PuntoDeVenta }
+                onClick = { selectedMethod = PaymentMethod.PuntoDeVenta },
+                highlightColor = lightOrange
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             PaymentOptionCard(
                 icon = Icons.Default.Money,
                 title = "Efectivo",
                 isSelected = selectedMethod == PaymentMethod.Efectivo,
-                onClick = { selectedMethod = PaymentMethod.Efectivo }
+                onClick = { selectedMethod = PaymentMethod.Efectivo },
+                highlightColor = lightOrange
             )
 
-            Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
             Button(
                 onClick = {
                     selectedMethod?.let {
                         cartViewModel.setPaymentMethod(it)
                         coroutineScope.launch {
-                            kotlinx.coroutines.delay(50) // 50 ms o 1 frame
+                            kotlinx.coroutines.delay(50)
                             onContinue(it)
                         }
                     }
@@ -101,9 +112,10 @@ fun PaymentMethodScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = orange)
             ) {
-                Text("Continuar")
+                Text("Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
             }
         }
     }
@@ -114,26 +126,26 @@ fun PaymentOptionCard(
     icon: ImageVector,
     title: String,
     isSelected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    highlightColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-            else MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) highlightColor else Color.White
         ),
-        elevation = CardDefaults.cardElevation(4.dp),
-        shape = RoundedCornerShape(12.dp)
+        elevation = CardDefaults.cardElevation(6.dp),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(16.dp)
         ) {
-            Icon(icon, contentDescription = title)
+            Icon(icon, contentDescription = title, tint = Color(0xFFE05B13))
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
         }
     }
 }

@@ -7,8 +7,11 @@ import com.example.mordisko.features.user.authentication.login.domain.LogoutUseC
 import com.example.mordisko.features.user.authentication.login.domain.repository.LoginRepository
 import com.example.mordisko.features.user.authentication.login.domain.repository.LogoutRepository
 import com.example.mordisko.features.user.cart.data.repository.OrderRepository
+import com.example.mordisko.features.user.profile.data.repository.UserRepositoryImpl  // ✅ CORRECTO
+import com.example.mordisko.features.user.profile.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,9 +33,13 @@ object FirebaseModule {
 
     @Provides
     @Singleton
+    fun provideFirebaseStorage(): FirebaseStorage = FirebaseStorage.getInstance()
+
+    @Provides
+    @Singleton
     fun provideLoginRepository(
         firebaseAuth: FirebaseAuth,
-        firestore: FirebaseFirestore // 🧩 Añadido para soporte de getUserRole
+        firestore: FirebaseFirestore
     ): LoginRepository = LoginRepositoryImpl(firebaseAuth, firestore)
 
     @Provides
@@ -54,4 +61,12 @@ object FirebaseModule {
         firestore: FirebaseFirestore,
         @ApplicationContext context: Context
     ): MenuRepositoryImpl = MenuRepositoryImpl(firestore, context)
+
+    @Provides
+    @Singleton
+    fun provideUserRepository(
+        firestore: FirebaseFirestore,
+        storage: FirebaseStorage,
+        auth: FirebaseAuth
+    ): UserRepository = UserRepositoryImpl(firestore, storage, auth) // ✅ Con clase correcta
 }

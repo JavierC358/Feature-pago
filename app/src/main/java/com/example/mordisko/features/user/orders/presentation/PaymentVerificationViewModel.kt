@@ -27,24 +27,51 @@ class PaymentVerificationViewModel @Inject constructor(
         orderNumber: String,
         amountPaid: String,
         referenceLast4: String,
-        phoneNumber: String
+        phoneNumber: String,
+        razonSocial: String?, // ✅ nombre claro
+        rif: String?,
+        direccion: String?
     ) {
         _state.value = PaymentVerificationState(isLoading = true)
+
+        val deseaFactura = !razonSocial.isNullOrBlank() && !rif.isNullOrBlank() && !direccion.isNullOrBlank()
 
         val paymentData = hashMapOf(
             "amountPaid" to amountPaid,
             "referenceLast4" to referenceLast4,
             "phoneNumber" to phoneNumber,
-            "status" to "pendiente", // Estado inicial
-            "timestamp" to System.currentTimeMillis()
-        )
+            "status" to "pendiente",
+            "timestamp" to System.currentTimeMillis(),
+            "deseaFactura" to deseaFactura
+        ).apply {
+            if (deseaFactura) {
+                put("razonSocial", razonSocial!!)
+                put("rif", rif!!)
+                put("direccion", direccion!!)
+            }
+        }
+
+        val facturaData = hashMapOf<String, Any>(
+            "deseaFactura" to deseaFactura
+        ).apply {
+            if (deseaFactura) {
+                put("razonSocial", razonSocial!!)
+                put("rif", rif!!)
+                put("direccion", direccion!!)
+            }
+        }
 
         viewModelScope.launch {
-            firestore.collection("orders")
-                .document(orderNumber)
-                .collection("payment_verification")
-                .document("info") // puedes usar también .add(paymentData) para ID automático
+            val orderRef = firestore.collection("orders").document(orderNumber)
+
+            // 1. Guardar verificación de pago
+            orderRef.collection("payment_verification")
+                .document("info")
                 .set(paymentData)
+
+            // 2. Guardar también en el documento principal de la orden
+            orderRef
+                .update(facturaData)
                 .addOnSuccessListener {
                     _state.value = PaymentVerificationState(isSuccess = true)
                 }

@@ -74,9 +74,6 @@ fun DashboardScreen(
                     onCategorySelected = { category ->
                         onCategorySelected(category)
                     },
-                    onLogout = {
-                        onLogout()
-                    }
                 )
             }
 

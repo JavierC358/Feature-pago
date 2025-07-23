@@ -32,6 +32,12 @@ object Routes {
     const val EditarPagoMovil = "editar_pago_movil"
     const val GESTIONAR_PRODUCTOS_SCREEN = "gestionar_productos"
     const val crearProductoRoute = "crear_producto"
+    const val Horario = "horario"
+    const val TerminosCondiciones = "terminos_condiciones"
+    const val PoliticaPrivacidad = "politica_privacidad"
+    const val Ayuda = "ayuda"
+    const val EditarPerfil = "editar_perfil"
+
     fun orderDetailRoute(orderNumber: String) = "order_detail/$orderNumber"
 
     // Función para navegación a pantalla de verificación de pago

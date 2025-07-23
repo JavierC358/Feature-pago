@@ -1,7 +1,10 @@
 package com.example.mordisko.navigation
 
 import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
@@ -17,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -46,10 +50,15 @@ import com.example.mordisko.features.admin.presentation.screens.OrderDetailScree
 import com.example.mordisko.features.admin.presentation.screens.ResumenDeOrdenesScreen
 import com.example.mordisko.features.admin.presentation.viewmodel.OrderDetailViewModel
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
+import com.example.mordisko.features.user.authentication.presentation.login.AyudaScreen
+import com.example.mordisko.features.user.profile.presentation.EditarPerfilScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ElegirRolScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
+import com.example.mordisko.features.user.authentication.presentation.login.HorarioScreen
 import com.example.mordisko.features.user.authentication.presentation.login.LoginScreen
+import com.example.mordisko.features.user.authentication.presentation.login.PoliticaPrivacidadScreen
 import com.example.mordisko.features.user.authentication.presentation.login.RegisterScreen
+import com.example.mordisko.features.user.authentication.presentation.login.TerminosCondicionesScreen
 import com.example.mordisko.features.user.authentication.presentation.splash.SplashScreen
 import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
@@ -64,6 +73,8 @@ import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
 import com.example.mordisko.features.user.dashboard.screen.SupportScreen
 import com.example.mordisko.features.user.home.HomeScreen
 import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
+import com.example.mordisko.features.user.profile.presentation.EditarPerfilViewModel
+import com.google.firebase.auth.FirebaseAuth
 import java.util.Date
 
 @Composable
@@ -100,13 +111,18 @@ fun AppNavigation(
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
                     },
+                    onNavigateToHorario = {
+                        navController.navigate(Routes.Horario) {
+                            popUpTo(Routes.Splash) { inclusive = true }
+                        }
+                    },
                     onNavigateToHome = {
                         navController.navigate(Routes.Home) {
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
                     },
                     onNavigateToAdminPanel = {
-                        navController.navigate("admin_dashboard") { // ✅ nueva ruta
+                        navController.navigate("admin_dashboard") {
                             popUpTo(Routes.Splash) { inclusive = true }
                         }
                     }
@@ -117,7 +133,7 @@ fun AppNavigation(
                 LoginScreen(
                     navController = navController, // ✅ agrega esto
                     onLoginSuccess = {
-                        navController.navigate(Routes.Home) {
+                        navController.navigate(Routes.Horario) {
                             popUpTo(Routes.Login) { inclusive = true }
                         }
                     },
@@ -162,6 +178,27 @@ fun AppNavigation(
                 )
             }
 
+            composable(Routes.Horario) {
+                HorarioScreen(
+                    onContinuar = {
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Horario) { inclusive = true }
+                        }
+                    },
+                    onTerminos = { navController.navigate(Routes.TerminosCondiciones) },
+                    onPoliticas = { navController.navigate(Routes.PoliticaPrivacidad) },
+                    onAyuda = { navController.navigate(Routes.Ayuda) },
+                    onEditarPerfil = { navController.navigate(Routes.EditarPerfil) },
+
+                    onLogout = {
+                        FirebaseAuth.getInstance().signOut()
+                        navController.navigate(Routes.Login) {
+                            popUpTo(0)
+                        }
+                    }
+                )
+            }
+
             composable("elegir_rol") {
                 ElegirRolScreen(
                     onClienteSelected = {
@@ -177,15 +214,43 @@ fun AppNavigation(
                 )
             }
 
+            composable(Routes.TerminosCondiciones) {
+                TerminosCondicionesScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.PoliticaPrivacidad) {
+                PoliticaPrivacidadScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.Ayuda) {
+                AyudaScreen(onBack = { navController.popBackStack() })
+            }
+
+            composable(Routes.EditarPerfil) {
+                val viewModel: EditarPerfilViewModel = hiltViewModel() // 👈 Aquí sí es válido
+                val context = LocalContext.current
+
+                val launcher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.GetContent()
+                ) { uri: Uri? ->
+                    uri?.let { selectedUri ->
+                        viewModel.onImageSelected(selectedUri)
+                    }
+                }
+
+                EditarPerfilScreen(
+                    onBack = { navController.popBackStack() },
+                    onGuardarExitoso = { navController.popBackStack() },
+                    pickImage = {
+                        launcher.launch("image/*")
+                    }
+                )
+            }
+
             composable(Routes.Home) {
                 HomeScreen(
                     onCategorySelected = { category ->
                         navController.navigate("${Routes.Menu}/$category")
-                    },
-                    onLogout = {
-                        navController.navigate(Routes.Login) {
-                            popUpTo(Routes.Home) { inclusive = true }
-                        }
                     }
                 )
             }

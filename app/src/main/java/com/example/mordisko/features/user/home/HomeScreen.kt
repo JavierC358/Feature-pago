@@ -22,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -39,10 +40,10 @@ import kotlin.math.sin
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onCategorySelected: (String) -> Unit,
-    onLogout: () -> Unit
+    onCategorySelected: (String) -> Unit
 ) {
     val orange = Color(0xFFE05B13)
+    val lightOrange = Color(0xFFFFA726)
 
     val centerCategory = pizzaCategories.firstOrNull { it.name.lowercase() == "pizzas" } ?: pizzaCategories.first()
     val otherCategories = pizzaCategories.filterNot { it == centerCategory }
@@ -50,10 +51,14 @@ fun HomeScreen(
     val radius = 130.dp
     val density = LocalDensity.current
 
+    val backgroundGradient = Brush.verticalGradient(
+        colors = listOf(orange, lightOrange)
+    )
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(orange)
+            .background(brush = backgroundGradient)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -97,19 +102,6 @@ fun HomeScreen(
             }
         }
 
-        Button(
-            onClick = { onLogout() },
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
-                contentColor = orange
-            ),
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            Text(
-                text = "Cerrar sesión",
-                fontWeight = FontWeight.Bold
-            )
-        }
     }
 }
 

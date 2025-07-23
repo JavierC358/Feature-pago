@@ -69,7 +69,8 @@ fun CartScreen(
     val subtotal = cartItems.sumOf { it.priceUsd * it.quantity}
 
     var showCommentDialog by remember { mutableStateOf(false) }
-    var comment by remember { mutableStateOf("") }
+    val commentState = cartViewModel.orderComment.collectAsState()
+    var comment by remember { mutableStateOf(commentState.value) }
 
     if (showCommentDialog) {
         AlertDialog(
@@ -78,6 +79,8 @@ fun CartScreen(
                 TextButton(onClick = { showCommentDialog = false }) {
                     Text("Aceptar")
                 }
+
+                cartViewModel.setOrderComment(comment)
             },
             dismissButton = {
                 TextButton(onClick = { showCommentDialog = false }) {
@@ -155,7 +158,7 @@ fun CartScreen(
                             model = item.imageUrl,
                             contentDescription = item.name,
                             modifier = Modifier.size(80.dp),
-                            contentScale = ContentScale.Crop
+                            contentScale = ContentScale.Fit
                         )
                         Spacer(modifier = Modifier.width(10.dp))
 

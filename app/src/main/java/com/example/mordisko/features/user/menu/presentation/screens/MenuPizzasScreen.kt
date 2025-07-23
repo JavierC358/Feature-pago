@@ -22,6 +22,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -45,6 +46,11 @@ fun MenuPizzasScreen(
     val products by viewModel.products.collectAsState()
 
     val orange = Color(0xFFE05B13)
+    val lightOrange = Color(0xFFFFA726)
+
+    val backgroundGradient = Brush.verticalGradient(
+        colors = listOf(orange, lightOrange)
+    )
 
     if (selectedPizza != null) {
         PizzaDetailScreen(
@@ -89,7 +95,7 @@ fun MenuPizzasScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(orange)
+            .background(brush = backgroundGradient)
             .padding(10.dp)
     ) {
         // 🔙 Botón Volver
