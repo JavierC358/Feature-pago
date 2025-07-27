@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
     alias(libs.plugins.androidHilt) apply false
     alias(libs.plugins.googleServices) apply false
+    id("com.google.firebase.crashlytics") version "2.9.9" apply false
 
 }
 

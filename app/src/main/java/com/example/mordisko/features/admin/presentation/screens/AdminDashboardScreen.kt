@@ -36,7 +36,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mordisko.features.admin.data.subirProductosAFirestore
+import com.example.mordisko.features.admin.presentation.viewmodel.AdminViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +54,8 @@ fun AdminDashboardScreen(
     onNavigateToCrearProducto: () -> Unit,
     onLogout: () -> Unit
 ) {
+    val viewModel: AdminViewModel = hiltViewModel()
+
     Scaffold(
         topBar = {
             TopAppBar(

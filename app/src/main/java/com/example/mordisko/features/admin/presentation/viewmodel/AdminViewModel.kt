@@ -1,8 +1,11 @@
 package com.example.mordisko.features.admin.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AdminViewModel @Inject constructor(
-    private val firestore: FirebaseFirestore
+    private val firestore: FirebaseFirestore,
+    private val auth: FirebaseAuth
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AdminVerificacionesState())
@@ -22,6 +26,26 @@ class AdminViewModel @Inject constructor(
     private val _exchangeRate = MutableStateFlow(0.0)
     val exchangeRate: StateFlow<Double> = _exchangeRate
 
+    init {
+        Log.d("TEST_INIT", "Entrando al init del AdminViewModel")
+        viewModelScope.launch {
+            try {
+                val token = FirebaseMessaging.getInstance().token.await()
+                val uid = auth.currentUser?.uid ?: return@launch
+
+                Log.d("🔥FCM_TOKEN", "Token del admin: $token")
+
+                // Guardar en la colección admin_tokens
+                firestore.collection("admin_tokens").document(uid).set(
+                    mapOf("token" to token)
+                ).await()
+
+                Log.d("🔥FCM_TOKEN", "Token guardado exitosamente en admin_tokens.")
+            } catch (e: Exception) {
+                Log.e("🔥FCM_TOKEN", "Error obteniendo o guardando el token FCM", e)
+            }
+        }
+    }
 
     fun loadVerificaciones() {
         viewModelScope.launch {
@@ -93,7 +117,32 @@ class AdminViewModel @Inject constructor(
                 .update("exchangeRateUsdToVes", nuevaTasa)
         }
     }
+
+    fun guardarTokenFcm() {
+        viewModelScope.launch {
+            try {
+                val uid = auth.currentUser?.uid ?: return@launch
+                val token = FirebaseMessaging.getInstance().token.await()
+
+                val userDocRef = firestore.collection("users").document(uid)
+                val snapshot = userDocRef.get().await()
+                val existingTokens = snapshot.get("fcmTokens") as? List<String> ?: emptyList()
+
+                if (!existingTokens.contains(token)) {
+                    val updatedTokens = existingTokens.toMutableList().apply { add(token) }
+                    userDocRef.update("fcmTokens", updatedTokens)
+                    Log.d("FCM", "Token FCM agregado correctamente.")
+                } else {
+                    Log.d("FCM", "Token FCM ya existe, no se actualiza.")
+                }
+            } catch (e: Exception) {
+                Log.e("FCM", "Error guardando token FCM: ${e.message}")
+            }
+        }
+    }
 }
+
+
 
 data class AdminVerificacionesState(
     val isLoading: Boolean = false,

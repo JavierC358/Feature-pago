@@ -59,6 +59,8 @@ class PaymentVerificationViewModel @Inject constructor(
                 put("rif", rif!!)
                 put("direccion", direccion!!)
             }
+            // 👇 Aquí actualizamos paymentStatus SOLO al enviar verificación
+            put("paymentStatus", "pendiente")
         }
 
         viewModelScope.launch {

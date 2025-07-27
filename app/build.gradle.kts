@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.googleServices)
 
     id ("dagger.hilt.android.plugin")
+    id("com.google.firebase.crashlytics")
 }
 
 android {
@@ -69,67 +70,56 @@ android {
 }
 
 dependencies {
-
-    // Prueba
+    // Compose
     implementation(platform("androidx.compose:compose-bom:2024.08.00"))
 
-    // ViewModel
+    // ViewModel y Navigation
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
-
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
-    //Firebase
+    // Firebase BoM (¡usa solo una vez!)
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
-    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Firebase - sin versiones específicas
     implementation("com.google.firebase:firebase-auth-ktx")
-
-    //Firestore
     implementation("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
+    implementation("com.google.firebase:firebase-messaging")
 
-    // Google maps
-    implementation ("com.google.android.gms:play-services-maps:18.2.0")
-    implementation ("com.google.maps.android:maps-compose:4.1.1")
-    implementation ("com.google.maps.android:maps-compose:4.1.1")
-    implementation ("com.google.android.gms:play-services-location:21.0.1")
+    // Google Maps
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.maps.android:maps-compose:4.1.1")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
 
-    // @OptIn(ExperimentalPermissionsApi::class)
+    // Permisos
     implementation("com.google.accompanist:accompanist-permissions:0.33.2-alpha")
 
-    //Esto habilita el uso de await() con tareas de Google Play Services
+    // Corrutinas con Google Play Services
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
 
+    // Hilt
     implementation(libs.hilt.android)
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation(libs.androidx.media3.common.ktx)
-    implementation(libs.firebase.crashlytics.buildtools)
+    implementation(libs.google.firebase.crashlytics.buildtools)
     kapt(libs.hilt.compiler)
 
+    // Icons y material
     implementation("androidx.compose.material:material-icons-extended:1.6.1")
+    implementation("com.google.android.material:material:1.6.0")
 
-    implementation(libs.androidx.activity.ktx)
+    // Coil para cargar imágenes desde URL
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
-    //Autenticar Login con Google
-
+    // Google Auth (Login con Google)
     implementation(libs.firebase.auth)
     implementation(libs.google.auth)
 
-    //Para cargar imágenes desde URL
-
-    implementation("io.coil-kt:coil-compose:2.5.0")
-
-    // Storage(Almacenamiento en firestore)
-
-    implementation("com.google.firebase:firebase-storage-ktx")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.6.4")
-
-    // Para material you
-
-    implementation("com.google.android.material:material:1.6.0")
-
+    // Compose + Material 3
+    implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -138,6 +128,8 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+
+    // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

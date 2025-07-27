@@ -1,6 +1,8 @@
 package com.example.mordisko.features.user.authentication
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,6 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.core.app.ActivityCompat
 import androidx.navigation.compose.rememberNavController
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
@@ -23,6 +26,15 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 🔔 PEDIR PERMISO DE NOTIFICACIONES PARA ANDROID 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                100
+            )
+        }
 
         val googleLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             val data: Intent? = result.data
@@ -48,3 +60,4 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
