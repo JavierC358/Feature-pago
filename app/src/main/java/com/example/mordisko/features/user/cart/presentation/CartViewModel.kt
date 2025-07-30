@@ -166,4 +166,24 @@ class CartViewModel @Inject constructor(
             }
         }
     }
+
+    fun repetirPedido(items: List<CartItem>) {
+        viewModelScope.launch {
+            // Reemplaza los items actuales por los del pedido repetido
+            _cartItems.value = items.toMutableList()
+
+            // Opcional: reiniciar el comentario
+            _orderComment.value = ""
+
+            // Opcional: limpiar la referencia de dirección si deseas
+            _addressReference.value = ""
+
+            // Opcional: resetear método de pago para que el cliente lo vuelva a seleccionar
+            _paymentMethod.value = null
+
+            // Puedes loguear para depuración
+            Log.d("CartViewModel", "✅ Pedido repetido con ${items.size} productos")
+        }
+    }
 }
+

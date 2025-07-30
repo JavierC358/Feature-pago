@@ -37,6 +37,9 @@ object Routes {
     const val PoliticaPrivacidad = "politica_privacidad"
     const val Ayuda = "ayuda"
     const val EditarPerfil = "editar_perfil"
+    const val History = "history"
+    const val Support = "support"
+    const val PEDIDO_EN_PROCESO = "pedido_en_proceso"
 
     fun orderDetailRoute(orderNumber: String) = "order_detail/$orderNumber"
 
@@ -49,6 +52,8 @@ object Routes {
     fun orderStatusRoute(orderNumber: String, montoTotal: Double): String {
         return "order_status/$orderNumber/$montoTotal"
     }
+
+    fun pedidoEnProcesoRoute(orderNumber: String) = "$PEDIDO_EN_PROCESO/$orderNumber"
 
     object AdminDashboard {
         const val route = "admin_dashboard"

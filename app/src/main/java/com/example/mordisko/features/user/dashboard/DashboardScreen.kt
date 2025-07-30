@@ -5,16 +5,30 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.*
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
-import com.example.mordisko.features.user.dashboard.screen.SupportScreen
+import com.example.mordisko.features.user.support.SupportScreen
 import com.example.mordisko.features.user.home.HomeScreen
 
 @Composable
@@ -27,10 +41,19 @@ fun DashboardScreen(
     val bottomNavItems = listOf(
         BottomNavItem("home", "Inicio", Icons.Default.Home),
         BottomNavItem("stats", "Pedidos", Icons.Default.BarChart),
-        BottomNavItem("support", "Soporte", Icons.Default.Phone)
+        BottomNavItem("support", "Soporte", Icons.Default.Phone),
+        BottomNavItem("cart", "Carrito", Icons.Default.ShoppingCart)
     )
     val localNavController = rememberNavController()
     var selectedItem by remember { mutableStateOf("home") }
+
+    val currentBackStackEntry by localNavController.currentBackStackEntryAsState()
+    LaunchedEffect(currentBackStackEntry) {
+        val currentRoute = currentBackStackEntry?.destination?.route
+        if (currentRoute in bottomNavItems.map { it.route }) {
+            selectedItem = currentRoute ?: "home"
+        }
+    }
 
     Scaffold(
         bottomBar = {
@@ -82,11 +105,24 @@ fun DashboardScreen(
             }
 
             composable("support") {
-                SupportScreen()
+                SupportScreen(
+                    onBack = { localNavController.popBackStack() }
+                )
+            }
+
+            composable("cart") {
+                CartScreen(
+                    cartViewModel = cartViewModel,
+                    navController = navController,
+                    onContinue = { navController.navigate("delivery") },
+                    onBack = { localNavController.popBackStack() },
+                    viewModel = cartViewModel // ✅ sí, lo estás usando dos veces pero necesario para compatibilidad
+                )
             }
         }
     }
 }
+
 
 data class BottomNavItem(
     val route: String,

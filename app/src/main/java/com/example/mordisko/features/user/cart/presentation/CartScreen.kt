@@ -57,7 +57,8 @@ fun CartScreen(
     cartViewModel: CartViewModel,
     navController: NavController,
     onContinue: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: CartViewModel
 ) {
     LaunchedEffect(Unit) {
         Log.d("CartScreen", "CartViewModel instancia: ${cartViewModel.hashCode()}")

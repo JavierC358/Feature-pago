@@ -167,11 +167,23 @@ fun OrderSummaryScreen(
                 cartViewModel.placeOrder(
                     exchangeRate = exchangeRate,
                     deliveryCostUsd = deliveryCostUsd,
-                    clearCartOnSuccess = false,
+                    clearCartOnSuccess = true,
                     onResult = { success, error, orderNumber ->
                         if (success && orderNumber != null) {
                             val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
-                            navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
+                            when (paymentMethod) {
+                                PaymentMethod.PagoMovil -> {
+                                    // Flujo actual de Pago Móvil
+                                    navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
+                                }
+                                PaymentMethod.PuntoDeVenta, PaymentMethod.Efectivo -> {
+                                    // Nuevo flujo para efectivo y punto de venta
+                                    navController.navigate("pedido_en_proceso/$encodedOrder")
+                                }
+                                else -> {
+                                    Toast.makeText(context, "Método de pago no válido", Toast.LENGTH_LONG).show()
+                                }
+                            }
                         } else {
                             Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
                         }

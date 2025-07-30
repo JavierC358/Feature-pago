@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -51,7 +52,6 @@ import com.example.mordisko.features.admin.presentation.screens.ResumenDeOrdenes
 import com.example.mordisko.features.admin.presentation.viewmodel.OrderDetailViewModel
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
 import com.example.mordisko.features.user.authentication.presentation.login.AyudaScreen
-import com.example.mordisko.features.user.profile.presentation.EditarPerfilScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ElegirRolScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
 import com.example.mordisko.features.user.authentication.presentation.login.HorarioScreen
@@ -66,14 +66,18 @@ import com.example.mordisko.features.user.cart.presentation.DeliveryScreen
 import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
 import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
 import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen
+import com.example.mordisko.features.user.cart.presentation.PedidoEnProcesoScreen
 import com.example.mordisko.features.user.cart.presentation.PedidoVerificadoScreen
 import com.example.mordisko.features.user.cart.presentation.VerificarPagoScreen
 import com.example.mordisko.features.user.cart.presentation.maps.MapScreen
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
-import com.example.mordisko.features.user.dashboard.screen.SupportScreen
+import com.example.mordisko.features.user.history.presentation.screen.HistoryScreen
+import com.example.mordisko.features.user.history.presentation.viewmodel.OrderHistoryViewModel
 import com.example.mordisko.features.user.home.HomeScreen
 import com.example.mordisko.features.user.menu.presentation.screens.MenuPizzasScreen
+import com.example.mordisko.features.user.profile.presentation.EditarPerfilScreen
 import com.example.mordisko.features.user.profile.presentation.EditarPerfilViewModel
+import com.example.mordisko.features.user.support.SupportScreen
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Date
 
@@ -274,7 +278,8 @@ fun AppNavigation(
                     },
                     onBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    viewModel = cartViewModel
                 )
             }
 
@@ -319,6 +324,20 @@ fun AppNavigation(
                 )
             }
 
+            composable(
+                route = Routes.PEDIDO_EN_PROCESO + "/{orderNumber}"
+            ) { backStackEntry ->
+                val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
+                PedidoEnProcesoScreen(
+                    orderNumber = orderNumber,
+                    onBackToHome = {
+                        navController.navigate(Routes.Home) { // 👈 corregido: Home con H mayúscula
+                            popUpTo(Routes.Home) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
             composable("${Routes.OrderStatus}/{orderNumber}/{montoTotal}") { backStackEntry ->
                 val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: "Desconocido"
                 val montoTotal = backStackEntry.arguments?.getString("montoTotal")?.toDoubleOrNull() ?: 0.0
@@ -355,8 +374,10 @@ fun AppNavigation(
                 OrdersStatsScreen()
             }
 
-            composable("support") {
-                SupportScreen()
+            composable(Routes.Support) {
+                SupportScreen(
+                    onBack = { navController.popBackStack() }
+                )
             }
 
             composable(Routes.AdminVerificaciones) {
@@ -499,6 +520,19 @@ fun AppNavigation(
                 )
             }
 
+            composable(Routes.History) {
+                val historyViewModel: OrderHistoryViewModel = hiltViewModel()
+
+                HistoryScreen(
+                    viewModel = historyViewModel,
+                    cartViewModel = cartViewModel,
+                    onBack = { navController.popBackStack() },
+                    onRepetirPedido = {
+                        navController.navigate(Routes.Cart)
+                    }
+                )
+            }
+
         }
     }
 }
@@ -508,8 +542,9 @@ fun AppNavigation(
 fun BottomBar(navController: NavHostController) {
     val bottomNavItems = listOf(
         BottomNavItem(Routes.Home, "Inicio", Icons.Default.Home),
-        BottomNavItem("stats", "Pedidos", Icons.Default.BarChart),
-        BottomNavItem("support", "Soporte", Icons.Default.Phone)
+        BottomNavItem(Routes.History, "Pedidos", Icons.Default.BarChart),
+        BottomNavItem("support", "Soporte", Icons.Default.Phone),
+        BottomNavItem(Routes.Cart, "Carrito", Icons.Default.ShoppingCart)
     )
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route

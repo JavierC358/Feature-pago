@@ -24,3 +24,8 @@ data class OrderModel(
     val direccion: String? = null
     
 )
+
+fun OrderModel.formattedDate(): String {
+    val sdf = java.text.SimpleDateFormat("dd/MM/yyyy HH:mm", java.util.Locale.getDefault())
+    return sdf.format(timestamp)
+}

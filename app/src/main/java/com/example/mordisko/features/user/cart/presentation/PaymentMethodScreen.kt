@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.rememberCoroutineScope
+import com.example.mordisko.core.navigation.Routes
 
 enum class PaymentMethod {
     PagoMovil, Efectivo, PuntoDeVenta
@@ -26,7 +27,7 @@ enum class PaymentMethod {
 fun PaymentMethodScreen(
     cartViewModel: CartViewModel,
     onBack: () -> Unit,
-    onContinue: (PaymentMethod) -> Unit
+    onContinue: (PaymentMethod) -> Unit // ✅ ahora es un callback correcto
 ) {
     var selectedMethod by remember { mutableStateOf<PaymentMethod?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -104,7 +105,7 @@ fun PaymentMethodScreen(
                         cartViewModel.setPaymentMethod(it)
                         coroutineScope.launch {
                             kotlinx.coroutines.delay(50)
-                            onContinue(it)
+                            onContinue(it) // ✅ se ejecuta el callback enviado
                         }
                     }
                 },
@@ -115,7 +116,12 @@ fun PaymentMethodScreen(
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = orange)
             ) {
-                Text("Continuar", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                Text(
+                    "Continuar",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
             }
         }
     }
@@ -145,7 +151,12 @@ fun PaymentOptionCard(
         ) {
             Icon(icon, contentDescription = title, tint = Color(0xFFE05B13))
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = title, fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Color.Black)
+            Text(
+                text = title,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Color.Black
+            )
         }
     }
 }

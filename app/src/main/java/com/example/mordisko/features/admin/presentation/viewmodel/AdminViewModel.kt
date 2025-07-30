@@ -35,7 +35,6 @@ class AdminViewModel @Inject constructor(
 
                 Log.d("🔥FCM_TOKEN", "Token del admin: $token")
 
-                // Guardar en la colección admin_tokens
                 firestore.collection("admin_tokens").document(uid).set(
                     mapOf("token" to token)
                 ).await()
@@ -53,53 +52,88 @@ class AdminViewModel @Inject constructor(
 
             val result = mutableListOf<VerificacionPago>()
 
-            val orders = firestore.collection("orders").get().await()
-            for (order in orders.documents) {
-                val orderId = order.id
-                val pagoDoc = firestore.collection("orders")
-                    .document(orderId)
-                    .collection("payment_verification")
-                    .document("info")
-                    .get().await()
+            try {
+                val orders = firestore.collection("orders")
+                    .get()
+                    .await()
 
-                if (pagoDoc.exists()) {
-                    val data = pagoDoc.data
-                    if (data != null) {
+                for (order in orders.documents) {
+                    val orderId = order.id
+
+                    val pagoDoc = firestore.collection("orders")
+                        .document(orderId)
+                        .collection("payment_verification")
+                        .document("info")
+                        .get()
+                        .await()
+
+                    if (pagoDoc.exists()) {
+                        // Caso Pago Móvil con subcolección
+                        val data = pagoDoc.data
+                        if (data != null) {
+                            result.add(
+                                VerificacionPago(
+                                    orderNumber = orderId,
+                                    amountPaid = data["amountPaid"]?.toString() ?: "",
+                                    referenceLast4 = data["referenceLast4"]?.toString() ?: "",
+                                    phoneNumber = data["phoneNumber"]?.toString() ?: "",
+                                    status = data["status"]?.toString()
+                                        ?: order.getString("paymentStatus")
+                                        ?: "pendiente"
+                                )
+                            )
+                        }
+                    } else {
+                        // Caso Efectivo o Punto de Venta (sin subcolección)
+                        val status = order.getString("paymentStatus") ?: "pendiente"
                         result.add(
                             VerificacionPago(
                                 orderNumber = orderId,
-                                amountPaid = data["amountPaid"]?.toString() ?: "",
-                                referenceLast4 = data["referenceLast4"]?.toString() ?: "",
-                                phoneNumber = data["phoneNumber"]?.toString() ?: "",
-                                status = data["status"]?.toString() ?: "pendiente"
+                                amountPaid = order.getDouble("totalBs")?.toString() ?: "",
+                                referenceLast4 = "--",
+                                phoneNumber = "--",
+                                status = status
                             )
                         )
                     }
                 }
-            }
 
-            _state.value = AdminVerificacionesState(verificaciones = result)
+                _state.value = AdminVerificacionesState(
+                    verificaciones = result,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error cargando verificaciones", e)
+                _state.value = _state.value.copy(isLoading = false)
+            }
         }
     }
 
     fun marcarComoVerificada(orderNumber: String) {
         viewModelScope.launch {
-            // 1. Actualiza la subcolección
-            firestore.collection("orders")
-                .document(orderNumber)
-                .collection("payment_verification")
-                .document("info")
-                .update("status", "verificado")
-                .await()
+            try {
+                // Actualiza la subcolección si existe
+                val pagoDocRef = firestore.collection("orders")
+                    .document(orderNumber)
+                    .collection("payment_verification")
+                    .document("info")
 
-            // 2. Actualiza también el campo 'paymentStatus' en el documento de la orden
-            firestore.collection("orders")
-                .document(orderNumber)
-                .update("paymentStatus", "verificado")
-                .await()
+                val pagoDoc = pagoDocRef.get().await()
+                if (pagoDoc.exists()) {
+                    pagoDocRef.update("status", "verificado").await()
+                }
 
-            // 3. Refresca la lista en pantalla
-            loadVerificaciones()
+                // Actualiza el campo paymentStatus en la orden
+                firestore.collection("orders")
+                    .document(orderNumber)
+                    .update("paymentStatus", "verificado")
+                    .await()
+
+                // Recargar para reflejar cambios
+                loadVerificaciones()
+            } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error marcando como verificada", e)
+            }
         }
     }
 
@@ -141,8 +175,6 @@ class AdminViewModel @Inject constructor(
         }
     }
 }
-
-
 
 data class AdminVerificacionesState(
     val isLoading: Boolean = false,

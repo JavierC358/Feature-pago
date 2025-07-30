@@ -22,16 +22,44 @@ class OrderRepository @Inject constructor(
             val userId = firebaseAuth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
 
             val now = Date()
-            val firebaseTimestamp = Timestamp(now.time / 1000, ((now.time % 1000) * 1000000).toInt())
+            val firebaseTimestamp = Timestamp(now)
 
-            val orderWithMeta = order.copy(
-                orderNumber = orderNumber,
-                userId = userId,
-                timestamp = firebaseTimestamp
+            // Mapear los items a un formato JSON-friendly
+            val itemsMap = order.items.map { item ->
+                mapOf(
+                    "name" to item.name,
+                    "quantity" to item.quantity,
+                    "priceUsd" to item.priceUsd,
+                    "size" to item.size,
+                    "imageUrl" to item.imageUrl
+                )
+            }
+
+            val orderWithMeta = hashMapOf(
+                "orderNumber" to orderNumber,
+                "userId" to userId,
+                "items" to itemsMap,
+                "deliveryOption" to order.deliveryOption,
+                "address" to order.address,
+                "reference" to order.reference,
+                "paymentMethod" to order.paymentMethod,
+                "exchangeRate" to order.exchangeRate,
+                "subtotalUsd" to order.subtotalUsd,
+                "deliveryCostUsd" to order.deliveryCostUsd,
+                "totalUsd" to order.totalUsd,
+                "totalBs" to order.totalBs,
+                "timestamp" to firebaseTimestamp,
+                "comment" to order.comment,
+                "deseaFactura" to order.deseaFactura,
+                "razonSocial" to order.razonSocial,
+                "rif" to order.rif,
+                "direccion" to order.direccion,
+                "paymentStatus" to "pendiente" // aseguramos el campo aquí
             )
 
-            firestore.collection("orders").document(orderNumber).set(orderWithMeta).await()
-            Result.success(orderNumber) // 👈 MUY IMPORTANTE
+            ordersCollection.document(orderNumber).set(orderWithMeta).await()
+            Result.success(orderNumber)
+
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -45,7 +73,7 @@ class OrderRepository @Inject constructor(
             transaction.update(counterDoc, "value", next)
             next
         }.await().let { nextNumber ->
-            return nextNumber.toString().padStart(6, '0') // Ejemplo: 000001
+            return nextNumber.toString().padStart(6, '0')
         }
     }
 
