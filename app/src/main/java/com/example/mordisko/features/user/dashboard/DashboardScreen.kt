@@ -25,6 +25,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.mordisko.core.navigation.Routes
 import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
@@ -97,6 +98,11 @@ fun DashboardScreen(
                     onCategorySelected = { category ->
                         onCategorySelected(category)
                     },
+                    onBackToHorario = { // 👈 lo añadimos
+                        navController.navigate(Routes.Horario) {
+                            popUpTo(Routes.Home) { inclusive = false }
+                        }
+                    }
                 )
             }
 

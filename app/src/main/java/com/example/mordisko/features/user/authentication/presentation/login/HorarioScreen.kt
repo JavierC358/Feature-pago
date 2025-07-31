@@ -150,13 +150,13 @@ fun HorarioScreen(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 4.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf(
-                    "Martes a Viernes" to "09:00 AM - 02:00 PM",
-                    "Sábado" to "09:00 PM - 03:00 PM",
-                    "Domingo" to "09:00 PM - 02:00 PM"
+                    "Martes a Viernes:" to "09:00 AM - 02:00 PM",
+                    "Sábado:" to "09:00 AM - 03:00 PM",
+                    "Domingo:" to "09:00 AM - 02:00 PM"
                 ).forEach { (dia, hora) ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),

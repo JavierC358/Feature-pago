@@ -133,7 +133,7 @@ fun PizzaDetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(pizza.name, style = MaterialTheme.typography.titleLarge, color = textColor)
-            Text(pizza.description, style = MaterialTheme.typography.bodyMedium, color = textColor)
+            Text(pizza.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -158,7 +158,7 @@ fun PizzaDetailScreen(
                                         else Color.Transparent
                                     )
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
-                                color = textColor
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             pizza.priceBySize?.get(size)?.let {
                                 Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.labelSmall)
@@ -294,12 +294,12 @@ fun ExtraSelectionSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         extras.forEach { extra ->
-            var selectedSize by remember { mutableStateOf("Med") }
+            var selectedSize by remember { mutableStateOf("EG") }
 
             Column(modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 4.dp)) {
-                Text(extra.name, style = MaterialTheme.typography.labelMedium, color = textColor)
+                Text(extra.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
                 Spacer(modifier = Modifier.height(2.dp))
 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
@@ -312,11 +312,11 @@ fun ExtraSelectionSheet(
                                     .clickable { selectedSize = size }
                                     .background(if (selectedSize == size) textColor.copy(alpha = 0.2f) else Color.Transparent)
                                     .padding(4.dp),
-                                color = textColor,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Text("$${"%.2f".format(price)}", color = textColor, style = MaterialTheme.typography.labelSmall)
-                            Text("Bs ${"%,.2f".format(price * 36.5)}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                            Text("Bs ${"%,.2f".format(price * 36.5)}", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

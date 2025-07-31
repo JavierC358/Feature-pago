@@ -79,7 +79,7 @@ fun DeliveryScreen(
                     Column {
                         Text(
                             text = address.ifBlank { "No se ha seleccionado dirección aún" },
-                            color = Color.DarkGray,
+                            color = Color.White,
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
 
@@ -186,7 +186,7 @@ fun DeliveryOptionCard(
             }
             if (description != null) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(description, color = Color.DarkGray)
+                Text(description, color = Color.White)
             }
             if (content != null) {
                 Spacer(modifier = Modifier.height(8.dp))

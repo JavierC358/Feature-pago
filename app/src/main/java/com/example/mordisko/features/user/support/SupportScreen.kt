@@ -40,7 +40,7 @@ fun SupportScreen(viewModel: SupportViewModel = hiltViewModel(), onBack: () -> U
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Soporte") }
+                title = { Text("Soporte", color = orange, ) }
             )
         }
     ) { innerPadding ->

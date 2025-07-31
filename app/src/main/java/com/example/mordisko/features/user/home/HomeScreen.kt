@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,9 +14,14 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +31,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -38,7 +45,8 @@ import kotlin.math.sin
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
-    onCategorySelected: (String) -> Unit
+    onCategorySelected: (String) -> Unit,
+    onBackToHorario: () -> Unit // 👈 callback para navegar a Horario
 ) {
     val orange = Color(0xFFE05B13)
     val lightOrange = Color(0xFFFFA726)
@@ -60,13 +68,28 @@ fun HomeScreen(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            text = "¡Nuestro Menu!",
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(16.dp)
-        )
+        // 🔹 Fila con flecha de retroceso + título
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { onBackToHorario() }) {
+                Icon(
+                    imageVector = Icons.Default.ArrowBack,
+                    contentDescription = "Volver",
+                    tint = Color.White
+                )
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "¡Nuestro Menu!",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Box(
             modifier = Modifier
@@ -76,10 +99,10 @@ fun HomeScreen(
         ) {
             // Centro: Pizzas
             CircularCategoryCard(category = centerCategory, onClick = {
-                onCategorySelected(centerCategory.enum.name) // ✅ CAMBIO
+                onCategorySelected(centerCategory.enum.name)
             })
 
-// Alrededor: otras categorías
+            // Alrededor: otras categorías
             otherCategories.forEachIndexed { index, category ->
                 val angleDeg = (360f / otherCategories.size) * index - 90f
                 val angleRad = Math.toRadians(angleDeg.toDouble())
@@ -94,12 +117,11 @@ fun HomeScreen(
                     }
                 ) {
                     CircularCategoryCard(category = category, onClick = {
-                        onCategorySelected(category.enum.name) // ✅ CAMBIO
+                        onCategorySelected(category.enum.name)
                     })
                 }
             }
         }
-
     }
 }
 

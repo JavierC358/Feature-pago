@@ -255,6 +255,11 @@ fun AppNavigation(
                 HomeScreen(
                     onCategorySelected = { category ->
                         navController.navigate("${Routes.Menu}/$category")
+                    },
+                    onBackToHorario = {
+                        navController.navigate(Routes.Horario) {
+                            popUpTo(Routes.Home) { inclusive = false }
+                        }
                     }
                 )
             }

@@ -36,10 +36,20 @@ fun HistoryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historial de Pedidos") },
+                title = {
+                    Text(
+                        "Historial de Pedidos",
+                        color = orange, // ✅ color naranja
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = "Volver",
+                            tint = orange // ✅ color naranja
+                        )
                     }
                 }
             )

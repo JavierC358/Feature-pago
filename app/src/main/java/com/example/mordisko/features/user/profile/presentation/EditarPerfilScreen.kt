@@ -18,6 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.mordisko.ui.theme.orange
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,6 +38,7 @@ fun EditarPerfilScreen(
     val telefonoError by viewModel.telefonoError.collectAsState()
     val cedulaError by viewModel.cedulaError.collectAsState()
 
+
     LaunchedEffect(Unit) {
         viewModel.loadProfile()
     }
@@ -47,10 +49,10 @@ fun EditarPerfilScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Editar datos personales") },
+                title = { Text("Editar datos personales", color = orange) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = orange)
                     }
                 }
             )
@@ -196,7 +198,9 @@ fun EditarPerfilScreen(
                 enabled = !isSaving,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .height(50.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = orange)
+
             ) {
                 Text(
                     text = if (isSaving) "Guardando..." else "Guardar cambios",
