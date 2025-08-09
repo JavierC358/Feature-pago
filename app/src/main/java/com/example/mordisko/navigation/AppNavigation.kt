@@ -62,7 +62,7 @@ import com.example.mordisko.features.user.authentication.presentation.login.Term
 import com.example.mordisko.features.user.authentication.presentation.splash.SplashScreen
 import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
-import com.example.mordisko.features.user.cart.presentation.DeliveryScreen
+import com.example.mordisko.features.user.delivery.presentation.screen.DeliveryScreen
 import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
 import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
 import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen

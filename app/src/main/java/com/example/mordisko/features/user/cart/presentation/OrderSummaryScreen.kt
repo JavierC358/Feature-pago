@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 
 @Composable
 fun OrderSummaryScreen(
@@ -35,6 +36,7 @@ fun OrderSummaryScreen(
     val reference by cartViewModel.addressReference.collectAsState()
     val paymentMethod by cartViewModel.paymentMethod.collectAsState()
     val exchangeRate by cartViewModel.exchangeRate.collectAsState()
+    val deliveryCostUsd by cartViewModel.deliveryCost.collectAsState()
 
     val orange = Color(0xFFE05B13)
     val lightOrange = Color(0xFFFFA726)
@@ -44,11 +46,11 @@ fun OrderSummaryScreen(
         if (exchangeRate == 0.0) {
             cartViewModel.loadExchangeRate()
         }
-    }
 
-    val deliveryCostUsd = when (deliveryOption) {
-        DeliveryOption.Moto -> 2.0
-        else -> 0.0
+        // ✅ Aseguramos costo mínimo si la opción es Moto
+        if (deliveryOption == DeliveryOption.Moto && deliveryCostUsd == 0.0) {
+            cartViewModel.setDeliveryCost(2.0)
+        }
     }
 
     val subtotalUsd = cartItems.sumOf { it.priceUsd * it.quantity }
@@ -92,7 +94,7 @@ fun OrderSummaryScreen(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = lightOrange)
         ) {
-            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 cartItems.forEach { item ->
                     Text("- ${item.name}: ${item.quantity} x $${item.priceUsd}", color = Color.White)
                 }
@@ -120,9 +122,10 @@ fun OrderSummaryScreen(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = lightOrange)
         ) {
-            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Text("Método de entrega: ${deliveryOption?.name ?: "No seleccionado"}", color = Color.White)
-                if (deliveryCostUsd > 0) {
+
+                if (deliveryOption == DeliveryOption.Moto) {
                     Spacer(modifier = Modifier.height(4.dp))
                     Text("Costo de entrega: $${"%.2f".format(deliveryCostUsd)}", color = Color.White)
                     Text("Dirección: $address", color = Color.White)
@@ -142,7 +145,7 @@ fun OrderSummaryScreen(
             shape = RoundedCornerShape(16.dp),
             colors = CardDefaults.cardColors(containerColor = lightOrange)
         ) {
-            Column(modifier = Modifier.padding(start = 24.dp, top = 16.dp, end = 16.dp, bottom = 16.dp)) {
+            Column(modifier = Modifier.padding(24.dp)) {
                 Text("Tasa de cambio: Bs/\$. $exchangeRate", color = Color.White)
                 Text("Total en USD: $${"%.2f".format(totalUsd)}", color = Color.White)
                 Text("Total en Bs: Bs. ${"%.2f".format(totalBs)}", fontWeight = FontWeight.Bold, color = Color.White)
@@ -173,11 +176,9 @@ fun OrderSummaryScreen(
                             val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
                             when (paymentMethod) {
                                 PaymentMethod.PagoMovil -> {
-                                    // Flujo actual de Pago Móvil
                                     navController.navigate("order_status/$encodedOrder/${"%.2f".format(totalBs)}")
                                 }
                                 PaymentMethod.PuntoDeVenta, PaymentMethod.Efectivo -> {
-                                    // Nuevo flujo para efectivo y punto de venta
                                     navController.navigate("pedido_en_proceso/$encodedOrder")
                                 }
                                 else -> {

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mordisko.features.user.cart.data.repository.OrderRepository
 import com.example.mordisko.features.user.cart.domain.model.CartItem
 import com.example.mordisko.features.user.cart.domain.model.OrderModel
+import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -46,24 +47,46 @@ class CartViewModel @Inject constructor(
     private val _orderComment = MutableStateFlow("")
     val orderComment: StateFlow<String> = _orderComment
 
+    private val _selectedLat = MutableStateFlow<Double?>(null)
+    val selectedLat: StateFlow<Double?> = _selectedLat
+
+    private val _selectedLng = MutableStateFlow<Double?>(null)
+    val selectedLng: StateFlow<Double?> = _selectedLng
+
+    private val _deliveryCost = MutableStateFlow(0.0)
+    val deliveryCost: StateFlow<Double> = _deliveryCost
+
     init {
         loadExchangeRate() // ✅ Carga automática al iniciar
     }
 
-    fun setOrderComment(comment: String) {
-        _orderComment.value = comment
+    // --- Métodos relacionados con dirección y delivery ---
+    fun setCoordinates(lat: Double, lng: Double) {
+        Log.d("MapDebug", "Coordenadas actualizadas: $lat, $lng")
+        _selectedLat.value = lat
+        _selectedLng.value = lng
     }
 
-    fun setPaymentMethod(method: PaymentMethod) {
-        _paymentMethod.value = method
+    fun setDeliveryCost(cost: Double) {
+        if (_deliveryOption.value == DeliveryOption.Moto) {
+            _deliveryCost.value = maxOf(2.0, cost) // ✅ Nunca menos de 2$
+        } else {
+            _deliveryCost.value = cost
+        }
     }
 
-    fun onAddressReferenceChanged(value: String) {
-        _addressReference.value = value
+    fun clearDeliveryData() {
+        _selectedLat.value = null
+        _selectedLng.value = null
+        _deliveryCost.value = 0.0
     }
 
     fun setDeliveryOption(option: DeliveryOption) {
         _deliveryOption.value = option
+        // ✅ Al elegir Moto, aseguramos costo mínimo
+        if (option == DeliveryOption.Moto && _deliveryCost.value == 0.0) {
+            _deliveryCost.value = 2.0
+        }
     }
 
     fun setMainLocation(location: LatLng?) {
@@ -74,6 +97,11 @@ class CartViewModel @Inject constructor(
         _secondaryAddress.value = address
     }
 
+    fun onAddressReferenceChanged(value: String) {
+        _addressReference.value = value
+    }
+
+    // --- Métodos relacionados con el carrito ---
     fun addItem(item: CartItem) {
         Log.d("CartViewModel", "Añadiendo item: $item")
         _cartItems.value = _cartItems.value + item
@@ -87,6 +115,16 @@ class CartViewModel @Inject constructor(
         _cartItems.value = emptyList()
     }
 
+    // --- Comentarios y pago ---
+    fun setOrderComment(comment: String) {
+        _orderComment.value = comment
+    }
+
+    fun setPaymentMethod(method: PaymentMethod) {
+        _paymentMethod.value = method
+    }
+
+    // --- Procesar pedido ---
     fun placeOrder(
         exchangeRate: Double,
         deliveryCostUsd: Double,
@@ -133,6 +171,7 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    // --- Cargar tasa de cambio ---
     fun loadExchangeRate() {
         viewModelScope.launch {
             try {
@@ -167,23 +206,17 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    // --- Repetir pedido ---
     fun repetirPedido(items: List<CartItem>) {
         viewModelScope.launch {
-            // Reemplaza los items actuales por los del pedido repetido
             _cartItems.value = items.toMutableList()
-
-            // Opcional: reiniciar el comentario
             _orderComment.value = ""
-
-            // Opcional: limpiar la referencia de dirección si deseas
             _addressReference.value = ""
-
-            // Opcional: resetear método de pago para que el cliente lo vuelva a seleccionar
             _paymentMethod.value = null
-
-            // Puedes loguear para depuración
             Log.d("CartViewModel", "✅ Pedido repetido con ${items.size} productos")
         }
     }
 }
+
+
 
