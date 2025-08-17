@@ -199,7 +199,7 @@ fun CircularCategoryCard(
                             AsyncImage(
                                 model = imageUrl,
                                 contentDescription = category.name,
-                                modifier = Modifier.size(72.dp),
+                                modifier = Modifier.size(92.dp),
                                 contentScale = ContentScale.Fit
                             )
                         }
