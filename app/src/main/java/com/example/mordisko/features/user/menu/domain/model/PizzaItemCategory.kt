@@ -7,5 +7,21 @@ enum class PizzaItemCategory {
     ROLLS,
     EXTRAS,
     POSTRES,
-    BEBIDAS
+    BEBIDAS;
+
+    companion object
+
+}
+
+fun PizzaItemCategory.Companion.valueOfOrNull(name: String): PizzaItemCategory? {
+    return try {
+        PizzaItemCategory.valueOf(
+            name.replace(" ", "")
+                .replace("-", "")
+                .replace("/", "")
+                .uppercase()
+        )
+    } catch (_: Exception) {
+        null
+    }
 }

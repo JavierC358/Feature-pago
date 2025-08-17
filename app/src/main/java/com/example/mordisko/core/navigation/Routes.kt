@@ -40,6 +40,8 @@ object Routes {
     const val History = "history"
     const val Support = "support"
     const val PEDIDO_EN_PROCESO = "pedido_en_proceso"
+    const val Faqs = "faqs"
+    const val ROUTE_ADMIN_CATEGORIES = "admin_categories"
 
     fun orderDetailRoute(orderNumber: String) = "order_detail/$orderNumber"
 

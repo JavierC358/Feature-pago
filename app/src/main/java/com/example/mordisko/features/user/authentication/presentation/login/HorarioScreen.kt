@@ -24,6 +24,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mordisko.R
+import com.example.mordisko.core.navigation.Routes
 
 @Composable
 fun HorarioScreen(
@@ -92,11 +93,9 @@ fun HorarioScreen(
                     text = { Text("Ayuda") },
                     onClick = {
                         expanded = false
-                        onAyuda()
+                        onAyuda()   // ← aquí navegas a la ayuda
                     },
-                    leadingIcon = {
-                        Icon(Icons.Default.Help, contentDescription = null)
-                    }
+                    leadingIcon = { Icon(Icons.Default.HelpOutline, contentDescription = null) }
                 )
                 DropdownMenuItem(
                     text = { Text("Editar perfil") },

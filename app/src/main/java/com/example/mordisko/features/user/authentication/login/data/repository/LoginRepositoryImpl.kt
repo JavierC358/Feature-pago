@@ -15,7 +15,9 @@ class LoginRepositoryImpl @Inject constructor(
 
     override suspend fun loginWithEmailAndPassword(email: String, password: String): Boolean {
         return try {
-            firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            val cleanEmail = email.trim()
+            val cleanPass  = password.trim()
+            firebaseAuth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
             true
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al iniciar sesión", e)
@@ -26,8 +28,12 @@ class LoginRepositoryImpl @Inject constructor(
     override suspend fun getUserRole(): String? {
         return try {
             val uid = firebaseAuth.currentUser?.uid ?: return null
-            val document = firestore.collection("users").document(uid).get().await()
-            document.getString("rol") ?: "cliente"
+            val doc = firestore.collection("users").document(uid).get().await()
+
+            // Lee "rol" (actual) o "role" (por si migras el nombre)
+            doc.getString("rol")
+                ?: doc.getString("role")
+                ?: "cliente"
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al obtener rol de usuario", e)
             null
@@ -40,7 +46,22 @@ class LoginRepositoryImpl @Inject constructor(
 
     override suspend fun registerWithEmailAndPassword(email: String, password: String): Boolean {
         return try {
-            firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+            val cleanEmail = email.trim()
+            val cleanPass  = password.trim()
+            firebaseAuth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
+            val uid = firebaseAuth.currentUser?.uid ?: return true // ya está creado en Auth
+
+            // ✅ Perfil inicial mínimo en "profile/{uid}" (dejas users solo para roles/admin)
+            val initialProfile = mapOf(
+                "correo" to cleanEmail,
+                "nombre" to "",
+                "telefono" to "",
+                "nacionalidad" to "",
+                "cedula" to "",
+                "photoUrl" to ""
+            )
+            firestore.collection("profile").document(uid).set(initialProfile).await()
+
             true
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al registrar usuario", e)

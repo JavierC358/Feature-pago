@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.mordisko.features.user.cart.data.repository.OrderRepository
 import com.example.mordisko.features.user.cart.domain.model.CartItem
 import com.example.mordisko.features.user.cart.domain.model.OrderModel
+import com.example.mordisko.features.user.cart.domain.model.SelectedExtra
 import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.firestore.FirebaseFirestore
@@ -214,6 +215,16 @@ class CartViewModel @Inject constructor(
             _addressReference.value = ""
             _paymentMethod.value = null
             Log.d("CartViewModel", "✅ Pedido repetido con ${items.size} productos")
+        }
+    }
+
+    fun removeExtra(item: CartItem, extra: SelectedExtra) {
+        _cartItems.value = _cartItems.value.map { cartItem ->
+            if (cartItem == item) {
+                cartItem.copy(extras = cartItem.extras.filterNot { it == extra })
+            } else {
+                cartItem
+            }
         }
     }
 }

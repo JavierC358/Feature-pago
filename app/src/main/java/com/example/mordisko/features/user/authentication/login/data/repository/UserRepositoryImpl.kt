@@ -8,12 +8,13 @@ import javax.inject.Inject
 class UserRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : UserRepository {
+
     override suspend fun getUserRole(uid: String): String? {
         return try {
             val doc = firestore.collection("users").document(uid).get().await()
-            doc.getString("role")
-        } catch (e: Exception) {
-            null
+            doc.getString("rol") ?: doc.getString("role") ?: "cliente"
+        } catch (_: Exception) {
+            "cliente"
         }
     }
 }

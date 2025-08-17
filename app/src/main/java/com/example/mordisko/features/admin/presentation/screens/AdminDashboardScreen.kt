@@ -52,6 +52,8 @@ fun AdminDashboardScreen(
     onNavigateToEditarPagoMovil: () -> Unit,
     onNavigateToGestionarProductos: () -> Unit,
     onNavigateToCrearProducto: () -> Unit,
+    // 🔹 Nuevo: navegación a Gestión de Categorías (tarjeta #10)
+    onNavigateToGestionarCategorias: () -> Unit,
     onLogout: () -> Unit
 ) {
     val viewModel: AdminViewModel = hiltViewModel()
@@ -85,8 +87,7 @@ fun AdminDashboardScreen(
             DashboardRow(
                 items = listOf(
                     DashboardItem("Cambiar Tasa $/Bs", Icons.Default.LocalPizza) { onNavigateToActualizarTasa() },
-
-                    DashboardItem("Gestionar Productos", Icons.Default.Settings) {onNavigateToGestionarProductos()}
+                    DashboardItem("Gestionar Productos", Icons.Default.Settings) { onNavigateToGestionarProductos() }
                 )
             )
 
@@ -100,7 +101,8 @@ fun AdminDashboardScreen(
             DashboardRow(
                 items = listOf(
                     DashboardItem("Crear Producto", Icons.Default.LocalPizza, onNavigateToCrearProducto),
-                    DashboardItem("Reserva", Icons.Default.Settings, { })
+                    // 🔹 Reemplazo “Reserva” por “Gestionar Categorías”
+                    DashboardItem("Gestionar Categorías", Icons.Default.Settings, onNavigateToGestionarCategorias)
                 )
             )
 

@@ -160,6 +160,20 @@ fun PizzaDetailScreen(
                                     .padding(horizontal = 10.dp, vertical = 6.dp),
                                 color = MaterialTheme.colorScheme.onSurface
                             )
+
+                            // 🔹 Nuevo: mostrar centímetros debajo de cada tamaño
+                            val sizeInCm = when (size) {
+                                "EG" -> "44 cm"
+                                "Gde" -> "38 cm"
+                                "Med" -> "32 cm"
+                                "Peq" -> "22 cm"
+                                else -> ""
+                            }
+                            if (sizeInCm.isNotEmpty()) {
+                                Text(sizeInCm, color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                            }
+
+                            // Precios
                             pizza.priceBySize?.get(size)?.let {
                                 Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.labelSmall)
                                 Text("Bs ${"%,.2f".format(it * 100)}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)

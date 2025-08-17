@@ -19,6 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -35,8 +40,10 @@ import com.example.mordisko.core.navigation.Routes.ACTUALIZAR_IMAGENES_SCREEN
 import com.example.mordisko.core.navigation.Routes.EDIT_PRICES_SCREEN
 import com.example.mordisko.core.navigation.Routes.GESTIONAR_PRODUCTOS_SCREEN
 import com.example.mordisko.core.navigation.Routes.REPORTES_FECHA_SCREEN
+import com.example.mordisko.core.navigation.Routes.ROUTE_ADMIN_CATEGORIES
 import com.example.mordisko.core.navigation.Routes.VERIFICAR_ORDENES_SCREEN
 import com.example.mordisko.core.navigation.Routes.crearProductoRoute
+import com.example.mordisko.features.admin.categories.presentation.AdminCategoriesScreen
 import com.example.mordisko.features.admin.presentation.screens.ActualizarImagenesScreen
 import com.example.mordisko.features.admin.presentation.screens.ActualizarTasaScreen
 import com.example.mordisko.features.admin.presentation.screens.AdminDashboardScreen
@@ -50,8 +57,8 @@ import com.example.mordisko.features.admin.presentation.screens.GestionarProduct
 import com.example.mordisko.features.admin.presentation.screens.OrderDetailScreen
 import com.example.mordisko.features.admin.presentation.screens.ResumenDeOrdenesScreen
 import com.example.mordisko.features.admin.presentation.viewmodel.OrderDetailViewModel
+import com.example.mordisko.features.help.faqs.presentation.PreguntasFrecuentesScreen
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
-import com.example.mordisko.features.user.authentication.presentation.login.AyudaScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ElegirRolScreen
 import com.example.mordisko.features.user.authentication.presentation.login.ForgotPasswordScreen
 import com.example.mordisko.features.user.authentication.presentation.login.HorarioScreen
@@ -79,6 +86,10 @@ import com.example.mordisko.features.user.profile.presentation.EditarPerfilScree
 import com.example.mordisko.features.user.profile.presentation.EditarPerfilViewModel
 import com.example.mordisko.features.user.support.SupportScreen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 @Composable
@@ -191,7 +202,7 @@ fun AppNavigation(
                     },
                     onTerminos = { navController.navigate(Routes.TerminosCondiciones) },
                     onPoliticas = { navController.navigate(Routes.PoliticaPrivacidad) },
-                    onAyuda = { navController.navigate(Routes.Ayuda) },
+                    onAyuda = { navController.navigate(Routes.Faqs) },
                     onEditarPerfil = { navController.navigate(Routes.EditarPerfil) },
 
                     onLogout = {
@@ -227,7 +238,7 @@ fun AppNavigation(
             }
 
             composable(Routes.Ayuda) {
-                AyudaScreen(onBack = { navController.popBackStack() })
+                PreguntasFrecuentesScreen(onBack = { navController.popBackStack() })
             }
 
             composable(Routes.EditarPerfil) {
@@ -385,7 +396,7 @@ fun AppNavigation(
                 )
             }
 
-            composable(Routes.AdminVerificaciones) {
+            composable(VERIFICAR_ORDENES_SCREEN) {
                 AdminVerificacionesScreen(navController = navController)
             }
 
@@ -404,22 +415,24 @@ fun AppNavigation(
                         navController.navigate(ACTUALIZAR_IMAGENES_SCREEN)
                     },
                     onNavigateToActualizarTasa = {
-                        navController.navigate("actualizar_tasa") // ✅ Ruta para editar descripción
+                        navController.navigate("actualizar_tasa")
                     },
-
                     onNavigateToEditarDescripcion = {
-                        navController.navigate("editar_descripcion") // ✅ Ruta para editar descripción
+                        navController.navigate("editar_descripcion")
                     },
                     onNavigateToEditarPagoMovil = {
-                        navController.navigate("editar_pago_movil") // ✅ Ruta para editar datos de pago
+                        navController.navigate("editar_pago_movil")
                     },
-
                     onNavigateToGestionarProductos = {
-                        navController.navigate(GESTIONAR_PRODUCTOS_SCREEN) },
-
+                        navController.navigate(GESTIONAR_PRODUCTOS_SCREEN)
+                    },
                     onNavigateToCrearProducto = {
-                        navController.navigate("crear_producto") }, // ✅ AQUÍ ESTÁ
-
+                        navController.navigate("crear_producto")
+                    },
+                    // 🔹 Nuevo callback para la tarjeta de categorías
+                    onNavigateToGestionarCategorias = {
+                        navController.navigate(Routes.ROUTE_ADMIN_CATEGORIES) // aquí defines la ruta que abrirá la pantalla de categorías
+                    },
                     onLogout = {
                         navController.navigate(Routes.Login) {
                             popUpTo(Routes.AdminDashboard.route) { inclusive = true }
@@ -472,15 +485,12 @@ fun AppNavigation(
                 }
             }
 
-            composable("resumen_admin_screen") {
+            composable(REPORTES_FECHA_SCREEN) {
                 AdminResumenPedidosScreen(
                     onConsultarClick = { desde, hasta ->
-                        // Navega a la pantalla de resultados pasando las fechas
                         navController.navigate("resumen_screen/${desde.time}/${hasta.time}")
                     },
-                    onBack = {
-                        navController.popBackStack()
-                    }
+                    onBack = { navController.popBackStack() }
                 )
             }
 
@@ -493,7 +503,7 @@ fun AppNavigation(
                 )
             }
 
-            composable("actualizar_imagenes") {
+            composable(ACTUALIZAR_IMAGENES_SCREEN) {
                 ActualizarImagenesScreen(
                     onBack = { navController.popBackStack() }
                 )
@@ -525,6 +535,59 @@ fun AppNavigation(
                 )
             }
 
+            composable(Routes.ROUTE_ADMIN_CATEGORIES) {
+                val context = LocalContext.current
+                var pendingCategoryId by rememberSaveable { mutableStateOf<String?>(null) }
+
+                // Picker
+                val pickImage = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.GetContent()
+                ) { uri: Uri? ->
+                    val catId = pendingCategoryId
+                    pendingCategoryId = null
+                    if (uri == null || catId == null) return@rememberLauncherForActivityResult
+
+                    // 1) Subir a Storage
+                    val storageRef = FirebaseStorage.getInstance()
+                        .reference.child("category_images/$catId.jpg")
+
+                    storageRef.putFile(uri)
+                        .addOnSuccessListener {
+                            // 2) Obtener URL de descarga
+                            storageRef.downloadUrl
+                                .addOnSuccessListener { downloadUri ->
+                                    val url = downloadUri.toString()
+
+                                    // 3) Actualizar imageUrl en Firestore
+                                    FirebaseFirestore.getInstance()
+                                        .collection("categories")
+                                        .document(catId)
+                                        .update("imageUrl", url)
+                                        .addOnSuccessListener {
+                                            // Opcional: feedback visual
+                                            // Toast.makeText(context, "Imagen actualizada", Toast.LENGTH_SHORT).show()
+                                        }
+                                        .addOnFailureListener { e ->
+                                            // Toast.makeText(context, "Error guardando URL: ${e.message}", Toast.LENGTH_LONG).show()
+                                        }
+                                }
+                                .addOnFailureListener { e ->
+                                    // Toast.makeText(context, "Error obteniendo URL: ${e.message}", Toast.LENGTH_LONG).show()
+                                }
+                        }
+                        .addOnFailureListener { e ->
+                            // Toast.makeText(context, "Error subiendo imagen: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
+                }
+
+                AdminCategoriesScreen(
+                    onBack = { navController.popBackStack() },
+                    onPickImageForCategory = { categoryId ->
+                        pendingCategoryId = categoryId
+                        pickImage.launch("image/*")
+                    }
+                )
+            }
             composable(Routes.History) {
                 val historyViewModel: OrderHistoryViewModel = hiltViewModel()
 
@@ -538,10 +601,16 @@ fun AppNavigation(
                 )
             }
 
+            composable(Routes.Faqs) {
+                PreguntasFrecuentesScreen(
+                    onBack = { navController.popBackStack() } // ← volver
+                )
+            }
+
+        }
+
         }
     }
-}
-
 
 @Composable
 fun BottomBar(navController: NavHostController) {

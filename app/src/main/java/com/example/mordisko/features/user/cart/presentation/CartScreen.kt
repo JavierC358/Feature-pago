@@ -198,9 +198,39 @@ fun CartScreen(
                                 style = MaterialTheme.typography.bodyMedium
                             )
                             Text("Tamaño: ${item.size}", color = textColor, fontSize = 12.sp)
-                            item.extras.forEach {
-                                Text("• ${it.name} (${it.size})", fontSize = 12.sp, color = Color.Gray)
+
+                            // ==== Extras con basurero por cada uno (cambio puntual) ====
+                            Column(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                item.extras.forEach { extra ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "• ${extra.name} (${extra.size})",
+                                            fontSize = 12.sp,
+                                            color = Color.Gray,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        IconButton(
+                                            onClick = { cartViewModel.removeExtra(item, extra) },
+                                            modifier = Modifier.size(24.dp)
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Quitar extra",
+                                                tint = Color.Gray,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    }
+                                }
                             }
+                            // ============================================================
                         }
 
                         IconButton(onClick = { cartViewModel.removeItem(item) }) {
