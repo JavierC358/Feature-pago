@@ -1,7 +1,6 @@
 package com.example.mordisko.features.user.menu.presentation.screens
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -44,8 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
@@ -56,6 +53,7 @@ import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.menu.domain.model.PizzaItem
 import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
+import com.google.firebase.firestore.FirebaseFirestore
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,6 +69,8 @@ fun PizzaDetailScreen(
         Log.d("PizzaDetailScreen", "cartViewModel hash: ${cartViewModel.hashCode()}")
     }
 
+    val exchangeRate by viewModel.exchangeRate.collectAsState()
+
     val sheetState = rememberModalBottomSheetState()
     var showExtrasSheet by remember { mutableStateOf(false) }
 
@@ -85,7 +85,6 @@ fun PizzaDetailScreen(
 
     val showSizes = pizza.category in listOf(
         PizzaItemCategory.PIZZAS,
-        PizzaItemCategory.DEDOS_DE_QUESO,
         PizzaItemCategory.EXTRAS
     )
 
@@ -176,7 +175,7 @@ fun PizzaDetailScreen(
                             // Precios
                             pizza.priceBySize?.get(size)?.let {
                                 Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.labelSmall)
-                                Text("Bs ${"%,.2f".format(it * 100)}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                                Text("Bs ${"%,.2f".format(it * exchangeRate)}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                             }
                         }
                     }
@@ -185,7 +184,7 @@ fun PizzaDetailScreen(
             } else {
                 pizza.priceUsd?.let {
                     Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.titleLarge)
-                    Text("Bs ${"%,.2f".format(it * 100)}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    Text("Bs ${"%,.2f".format(it * exchangeRate)}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -214,7 +213,7 @@ fun PizzaDetailScreen(
                         Column(modifier = Modifier.weight(1f)) {
                             Text("• ${extra.name} (${extra.size})", color = textColor)
                             Text(
-                                "$${"%.2f".format(extra.priceUsd)} / Bs ${"%,.2f".format(extra.priceUsd * 36.5)}",
+                                "$${"%.2f".format(extra.priceUsd)} / Bs ${"%,.2f".format(extra.priceUsd * exchangeRate)}",
                                 color = Color.Gray,
                                 style = MaterialTheme.typography.bodySmall
                             )
@@ -282,7 +281,8 @@ fun PizzaDetailScreen(
                         showExtrasSheet = false
                     },
                     textColor = textColor,
-                    viewModel = viewModel // ✅ pasamos el ViewModel aquí
+                    viewModel = viewModel, // ✅ pasamos el ViewModel aquí
+                    exchangeRate = exchangeRate // ← NUEVO
                 )
             }
         }
@@ -293,7 +293,8 @@ fun PizzaDetailScreen(
 fun ExtraSelectionSheet(
     onExtraSelected: (SelectedExtra) -> Unit,
     textColor: Color,
-    viewModel: MenuViewModel = hiltViewModel()
+    viewModel: MenuViewModel = hiltViewModel(),
+    exchangeRate: Double // ← NUEVO
 ) {
     val extras by viewModel.extras.collectAsState()
     val sizes = listOf("EG", "Gde", "Med", "Peq")
@@ -330,7 +331,7 @@ fun ExtraSelectionSheet(
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Text("$${"%.2f".format(price)}", color = textColor, style = MaterialTheme.typography.labelSmall)
-                            Text("Bs ${"%,.2f".format(price * 36.5)}", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelSmall)
+                            Text("Bs ${"%,.2f".format(price * exchangeRate)}", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelSmall)
                         }
                     }
                 }

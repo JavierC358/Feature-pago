@@ -10,14 +10,13 @@ fun toPizzaItemCategory(category: String): PizzaItemCategory {
 
     val map = mapOf(
         "pizzas" to PizzaItemCategory.PIZZAS,
-        "calzone" to PizzaItemCategory.CALZONE,
-        "dedos de queso" to PizzaItemCategory.DEDOS_DE_QUESO,
-        "dedos" to PizzaItemCategory.DEDOS_DE_QUESO,
-        "rolls" to PizzaItemCategory.ROLLS,
-        "rolls de pizzas" to PizzaItemCategory.ROLLS,
+        "carne en vara" to PizzaItemCategory.CARNE_EN_VARA,
+        "ahumados" to PizzaItemCategory.AHUMADOS,
+        "a la broaster" to PizzaItemCategory.A_LA_BROASTER,
         "extras" to PizzaItemCategory.EXTRAS,
-        "postres" to PizzaItemCategory.POSTRES,
-        "bebidas" to PizzaItemCategory.BEBIDAS
+        "cachapas" to PizzaItemCategory.CACHAPAS,
+        "bebidas" to PizzaItemCategory.BEBIDAS,
+        "pepitos" to PizzaItemCategory.PEPITOS
     )
 
     return map[normalized] ?: PizzaItemCategory.PIZZAS.also {
@@ -29,11 +28,12 @@ fun toPizzaItemCategory(category: String): PizzaItemCategory {
 fun mapPizzaItemCategoryToString(category: PizzaItemCategory): String {
     return when (category) {
         PizzaItemCategory.PIZZAS -> "Pizzas"
-        PizzaItemCategory.CALZONE -> "Calzone"
-        PizzaItemCategory.DEDOS_DE_QUESO -> "Dedos de Queso"
-        PizzaItemCategory.ROLLS -> "Rolls de Pizzas"
+        PizzaItemCategory.CARNE_EN_VARA -> "Carne en Vara"
+        PizzaItemCategory.AHUMADOS -> "Ahumados"
+        PizzaItemCategory.A_LA_BROASTER -> "A la Broaster"
         PizzaItemCategory.EXTRAS -> "Extras"
-        PizzaItemCategory.POSTRES -> "Postres"
+        PizzaItemCategory.CACHAPAS -> "Cachapas"
         PizzaItemCategory.BEBIDAS -> "Bebidas"
+        PizzaItemCategory.PEPITOS -> "Pepitos"
     }
 }

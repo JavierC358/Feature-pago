@@ -78,7 +78,7 @@ fun ProductEditCard(
 ) {
     val isMultiSize = product.category in listOf(
         PizzaItemCategory.PIZZAS,
-        PizzaItemCategory.DEDOS_DE_QUESO,
+        PizzaItemCategory.AHUMADOS,
         PizzaItemCategory.EXTRAS
     )
 

@@ -11,9 +11,9 @@ data class PizzaCategory(
 
 val pizzaCategories = listOf(
     PizzaCategory("Pizzas", R.drawable.ic_pizzas13_menu, PizzaItemCategory.PIZZAS),
-    PizzaCategory("Calzone", R.drawable.ic_calzone3_background, PizzaItemCategory.CALZONE),
-    PizzaCategory("Dedos de Queso", R.drawable.ic_dedos_queso_background, PizzaItemCategory.DEDOS_DE_QUESO),
-    PizzaCategory("Rolls de Pizzas", R.drawable.ic_rolls_background, PizzaItemCategory.ROLLS),
-    PizzaCategory("Postres", R.drawable.ic_postres_background, PizzaItemCategory.POSTRES),
+    PizzaCategory("Carne en Vara", R.drawable.ic_calzone3_background, PizzaItemCategory.CARNE_EN_VARA),
+    PizzaCategory("Ahumados", R.drawable.ic_dedos_queso_background, PizzaItemCategory.AHUMADOS),
+    PizzaCategory("A la Broaster", R.drawable.ic_rolls_background, PizzaItemCategory.A_LA_BROASTER),
+    PizzaCategory("Cachapas", R.drawable.ic_postres_background, PizzaItemCategory.CACHAPAS),
     PizzaCategory("Bebidas", R.drawable.ic_refrescos_background, PizzaItemCategory.BEBIDAS)
 )

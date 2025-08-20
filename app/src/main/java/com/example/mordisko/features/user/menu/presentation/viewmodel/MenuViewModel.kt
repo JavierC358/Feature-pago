@@ -14,11 +14,18 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.ListenerRegistration
 
 @HiltViewModel
 class MenuViewModel @Inject constructor(
     private val repository: MenuRepository // ✅ Añadimos esta línea
 ) : ViewModel() {
+
+    private val _exchangeRate = MutableStateFlow(100.0)
+    val exchangeRate: StateFlow<Double> = _exchangeRate
+
+    private var exchangeListener: ListenerRegistration? = null
 
     // 🍕 Productos del menú (cargados desde Firestore)
     private val _products = MutableStateFlow<List<PizzaItem>>(emptyList())
@@ -37,6 +44,33 @@ class MenuViewModel @Inject constructor(
                 _extras.value = lista.filter { it.category == PizzaItemCategory.EXTRAS } // ✅ Enum directamente
             }
         }
+
+        observeExchangeRate()
+    }
+
+    private fun observeExchangeRate() {
+        val docRef = FirebaseFirestore.getInstance()
+            .collection("config")
+            .document("exchange_rate")
+
+        exchangeListener = docRef.addSnapshotListener { snap, err ->
+            if (err != null) {
+                err.printStackTrace()
+                return@addSnapshotListener
+            }
+            if (snap == null || !snap.exists()) return@addSnapshotListener
+
+            // ⚠️ Tu campo en Firestore se llama: usdToBs
+            val n = snap.get("usdToBs") as? Number
+            if (n != null && n.toDouble() > 0.0) {
+                _exchangeRate.value = n.toDouble()
+            }
+        }
+    }
+
+    override fun onCleared() {
+        exchangeListener?.remove()
+        super.onCleared()
     }
 
     private fun fetchProductsFromFirestore() {

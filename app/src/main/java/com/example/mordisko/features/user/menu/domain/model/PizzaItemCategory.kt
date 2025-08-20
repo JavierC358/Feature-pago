@@ -2,12 +2,13 @@ package com.example.mordisko.features.user.menu.domain.model
 
 enum class PizzaItemCategory {
     PIZZAS,
-    CALZONE,
-    DEDOS_DE_QUESO,
-    ROLLS,
+    CARNE_EN_VARA,
+    AHUMADOS,
+    A_LA_BROASTER,
     EXTRAS,
-    POSTRES,
-    BEBIDAS;
+    CACHAPAS,
+    BEBIDAS,
+    PEPITOS;
 
     companion object
 
@@ -16,9 +17,10 @@ enum class PizzaItemCategory {
 fun PizzaItemCategory.Companion.valueOfOrNull(name: String): PizzaItemCategory? {
     return try {
         PizzaItemCategory.valueOf(
-            name.replace(" ", "")
-                .replace("-", "")
-                .replace("/", "")
+            name.trim()
+                .replace(" ", "_")   // 🔹 ahora conserva guion bajo
+                .replace("-", "_")   // 🔹 también guiones normales
+                .replace("/", "_")   // 🔹 y slashes
                 .uppercase()
         )
     } catch (_: Exception) {
