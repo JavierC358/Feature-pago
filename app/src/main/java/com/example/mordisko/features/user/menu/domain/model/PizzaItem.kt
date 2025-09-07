@@ -9,5 +9,7 @@ data class PizzaItem(
     val priceUsd: Double = 0.0,
     val priceBySize: Map<String, Double> = emptyMap(),
     val priceBs: Double = 0.0,
-    val visible: Boolean = true
+    val visible: Boolean = true,
+    val priceByWeight: Map<String, Double> = emptyMap(),
+    val priceByPortion: Map<String, Double> = emptyMap()
 )

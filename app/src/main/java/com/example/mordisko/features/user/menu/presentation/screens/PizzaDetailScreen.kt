@@ -44,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -53,8 +54,6 @@ import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.menu.domain.model.PizzaItem
 import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.presentation.viewmodel.MenuViewModel
-import com.google.firebase.firestore.FirebaseFirestore
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -69,6 +68,21 @@ fun PizzaDetailScreen(
         Log.d("PizzaDetailScreen", "cartViewModel hash: ${cartViewModel.hashCode()}")
     }
 
+    // Opciones de peso (clave usada en Firestore -> etiqueta visible)
+    val WEIGHT_OPTIONS = listOf(
+        "250" to "0.250 Kg",
+        "500" to "0.500 Kg",
+        "750" to "0.750 Kg",
+        "1000" to "1.00 Kg"
+    )
+
+    val BROASTER_PORTIONS = listOf(
+        "QUARTER" to "1/4 Pollo",
+        "HALF" to "1/2 Pollo",
+        "THREE_QUARTERS" to "3/4 Pollo",
+        "WHOLE" to "1 pollo"
+    )
+
     val exchangeRate by viewModel.exchangeRate.collectAsState()
 
     val sheetState = rememberModalBottomSheetState()
@@ -79,14 +93,20 @@ fun PizzaDetailScreen(
     val selectedExtras = selectedPizza?.name?.let { selectedExtrasMap[it] } ?: emptyList()
 
     val textColor = Color(0xFFE05B13)
-    var selectedSize by remember { mutableStateOf("Med") }
-    var quantity by remember { mutableStateOf(1) }
-    val sizes = listOf("EG", "Gde", "Med", "Peq")
 
-    val showSizes = pizza.category in listOf(
-        PizzaItemCategory.PIZZAS,
-        PizzaItemCategory.EXTRAS
-    )
+    // Tamaños de pizza
+    var selectedSize by remember { mutableStateOf("Med") }
+    val sizes = listOf("EG", "Gde", "Med", "Peq")
+    val showSizes = pizza.category in listOf(PizzaItemCategory.PIZZAS, PizzaItemCategory.EXTRAS)
+
+    // Pesos para carne / ahumados
+    val isMeatCategory =
+        pizza.category == PizzaItemCategory.CARNE_EN_VARA || pizza.category == PizzaItemCategory.AHUMADOS
+    val isBroasterCategory = pizza.category == PizzaItemCategory.A_LA_BROASTER
+    var selectedWeightKey by remember { mutableStateOf("500") } // default 0.500 Kg
+    var selectedPortionKey by remember { mutableStateOf("HALF") }
+
+    var quantity by remember { mutableStateOf(1) }
 
     Box(
         modifier = Modifier
@@ -98,7 +118,7 @@ fun PizzaDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .verticalScroll(rememberScrollState()), // ✅ scroll para evitar que el carrito se pierda
+                .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Row(
@@ -132,11 +152,74 @@ fun PizzaDetailScreen(
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(pizza.name, style = MaterialTheme.typography.titleLarge, color = textColor)
-            Text(pizza.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(
+                pizza.description,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            if (showSizes) {
+            // ====== BLOQUE NUEVO: selector por peso para Carne en Vara / Ahumados ======
+            if (isMeatCategory) {
+                Text("Presentación:", style = MaterialTheme.typography.titleMedium, color = textColor)
+                Spacer(Modifier.height(8.dp))
+
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    WEIGHT_OPTIONS.forEach { (key, label) ->
+                        val usd = pizza.priceByWeight?.get(key)
+                        WeightOptionCard(
+                            label = label,
+                            selected = key == selectedWeightKey,
+                            onClick = { if (usd != null) selectedWeightKey = key },
+                            usd = usd,
+                            bs = usd?.let { it * exchangeRate },
+                            accent = textColor,
+                            labelFontSize = 11.sp,          // 👈 ajusta aquí
+                            priceFontSizeUsd = 11.sp,
+                            priceFontSizeBs = 10.sp,
+                            horizontalPad = 8,
+                            verticalPad = 1
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            // ====== FIN BLOQUE NUEVO ======
+
+            // ====== BLOQUE NUEVO: selector por porción para A la Broaster ======
+            if (isBroasterCategory) {
+                Text("Porción:", style = MaterialTheme.typography.titleMedium, color = textColor)
+                Spacer(Modifier.height(8.dp))
+
+                // Puedes usar FlowRow si quieres que se ajuste mejor:
+                Row(
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    BROASTER_PORTIONS.forEach { (key, label) ->
+                        val usd = pizza.priceByPortion[key]
+                        WeightOptionCard( // reutilizamos el mismo componente; si quieres, renómbralo a OptionCard
+                            label = label,
+                            selected = key == selectedPortionKey,
+                            onClick = { if (usd != null) selectedPortionKey = key },
+                            usd = usd,
+                            bs = usd?.let { it * exchangeRate },
+                            accent = textColor
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+// ====== FIN BLOQUE NUEVO ======
+
+            // Tamaños de pizza (se muestra solo si NO es carne/ahumados)
+            if (!isMeatCategory && showSizes) {
                 Text("Tamaño:", style = MaterialTheme.typography.titleMedium, color = textColor)
                 Row(
                     horizontalArrangement = Arrangement.SpaceEvenly,
@@ -160,7 +243,6 @@ fun PizzaDetailScreen(
                                 color = MaterialTheme.colorScheme.onSurface
                             )
 
-                            // 🔹 Nuevo: mostrar centímetros debajo de cada tamaño
                             val sizeInCm = when (size) {
                                 "EG" -> "44 cm"
                                 "Gde" -> "38 cm"
@@ -172,19 +254,31 @@ fun PizzaDetailScreen(
                                 Text(sizeInCm, color = Color.Gray, style = MaterialTheme.typography.labelSmall)
                             }
 
-                            // Precios
                             pizza.priceBySize?.get(size)?.let {
-                                Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.labelSmall)
-                                Text("Bs ${"%,.2f".format(it * exchangeRate)}", color = Color.Gray, style = MaterialTheme.typography.labelSmall)
+                                Text(
+                                    "$${"%.2f".format(it)}",
+                                    color = textColor,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
+                                Text(
+                                    "Bs ${"%,.2f".format(it * exchangeRate)}",
+                                    color = Color.Gray,
+                                    style = MaterialTheme.typography.labelSmall
+                                )
                             }
                         }
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-            } else {
+            } else if (!isMeatCategory) {
+                // Items sin tamaños (ni peso)
                 pizza.priceUsd?.let {
                     Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.titleLarge)
-                    Text("Bs ${"%,.2f".format(it * exchangeRate)}", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "Bs ${"%,.2f".format(it * exchangeRate)}",
+                        color = Color.Gray,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
@@ -241,13 +335,24 @@ fun PizzaDetailScreen(
                 Spacer(modifier = Modifier.width(16.dp))
 
                 IconButton(onClick = {
-                    val unitPrice = (pizza.priceBySize?.get(selectedSize) ?: pizza.priceUsd ?: 0.0) +
-                            selectedExtras.sumOf { it.priceUsd }
+                    val baseUsd = when {
+                        isMeatCategory -> pizza.priceByWeight[selectedWeightKey] ?: 0.0
+                        isBroasterCategory -> pizza.priceByPortion[selectedPortionKey] ?: 0.0   // 👈 NUEVO
+                        else -> (pizza.priceBySize[selectedSize] ?: pizza.priceUsd ?: 0.0)
+                    }
+
+                    val unitPrice = baseUsd + selectedExtras.sumOf { it.priceUsd }
+
+                    val sizeOrWeightOrPortionLabel = when {
+                        isMeatCategory -> WEIGHT_OPTIONS.firstOrNull { it.first == selectedWeightKey }?.second ?: "0.500 Kg"
+                        isBroasterCategory -> BROASTER_PORTIONS.firstOrNull { it.first == selectedPortionKey }?.second ?: "1/2 Pollo" // 👈 NUEVO
+                        else -> selectedSize
+                    }
 
                     cartViewModel.addItem(
                         CartItem(
                             name = pizza.name,
-                            size = selectedSize,
+                            size = sizeOrWeightOrPortionLabel,  // 👈 enviamos la porción seleccionada como “size”
                             quantity = quantity,
                             imageUrl = pizza.imageUrl,
                             priceUsd = unitPrice,
@@ -259,7 +364,12 @@ fun PizzaDetailScreen(
                     viewModel.clearSelectedPizza()
                     navController.navigate("cart")
                 }) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = "Agregar al carrito", tint = textColor, modifier = Modifier.size(36.dp))
+                    Icon(
+                        Icons.Default.ShoppingCart,
+                        contentDescription = "Agregar al carrito",
+                        tint = textColor,
+                        modifier = Modifier.size(36.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
@@ -281,10 +391,47 @@ fun PizzaDetailScreen(
                         showExtrasSheet = false
                     },
                     textColor = textColor,
-                    viewModel = viewModel, // ✅ pasamos el ViewModel aquí
-                    exchangeRate = exchangeRate // ← NUEVO
+                    viewModel = viewModel,
+                    exchangeRate = exchangeRate
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun WeightOptionCard(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    usd: Double?,
+    bs: Double?,
+    accent: Color,
+    labelFontSize: androidx.compose.ui.unit.TextUnit = 11.sp,  // 👈 más pequeño
+    priceFontSizeUsd: androidx.compose.ui.unit.TextUnit = 11.sp,
+    priceFontSizeBs: androidx.compose.ui.unit.TextUnit = 10.sp,
+    horizontalPad: Int = 8,  // 👈 menos padding
+    verticalPad: Int = 1
+) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = label,
+            modifier = Modifier
+                .padding(4.dp)
+                .selectable(selected = selected, onClick = onClick)
+                .background(if (selected) accent.copy(alpha = 0.2f) else Color.Transparent)
+                .padding(horizontal = horizontalPad.dp, vertical = verticalPad.dp),
+            color = MaterialTheme.colorScheme.onSurface,
+            fontSize = labelFontSize,
+            maxLines = 1
+        )
+        if (usd != null) {
+            Text("$${"%.2f".format(usd)}", color = accent, fontSize = priceFontSizeUsd, maxLines = 1)
+            if (bs != null) {
+                Text("Bs ${"%,.2f".format(bs)}", color = Color.Gray, fontSize = priceFontSizeBs, maxLines = 1)
+            }
+        } else {
+            Text("-", color = Color.Gray, fontSize = priceFontSizeBs, maxLines = 1)
         }
     }
 }
@@ -294,7 +441,7 @@ fun ExtraSelectionSheet(
     onExtraSelected: (SelectedExtra) -> Unit,
     textColor: Color,
     viewModel: MenuViewModel = hiltViewModel(),
-    exchangeRate: Double // ← NUEVO
+    exchangeRate: Double
 ) {
     val extras by viewModel.extras.collectAsState()
     val sizes = listOf("EG", "Gde", "Med", "Peq")
@@ -311,13 +458,22 @@ fun ExtraSelectionSheet(
         extras.forEach { extra ->
             var selectedSize by remember { mutableStateOf("EG") }
 
-            Column(modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)) {
-                Text(extra.name, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Text(
+                    extra.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(modifier = Modifier.height(2.dp))
 
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
                     sizes.forEach { size ->
                         val price = extra.priceBySize?.get(size) ?: 0.0
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -331,7 +487,11 @@ fun ExtraSelectionSheet(
                                 style = MaterialTheme.typography.labelSmall
                             )
                             Text("$${"%.2f".format(price)}", color = textColor, style = MaterialTheme.typography.labelSmall)
-                            Text("Bs ${"%,.2f".format(price * exchangeRate)}", color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.labelSmall)
+                            Text(
+                                "Bs ${"%,.2f".format(price * exchangeRate)}",
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.labelSmall
+                            )
                         }
                     }
                 }

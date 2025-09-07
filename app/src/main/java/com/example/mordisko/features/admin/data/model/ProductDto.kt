@@ -15,6 +15,8 @@ data class ProductDto(
     val category: String = "",
     val priceUsd: Double? = null,
     val priceBySize: Map<String, Double>? = null,
+    val priceByWeight: Map<String, Double>? = null,
+    val priceByPortion: Map<String, Double>? = null,
     val visible: Boolean = true
 )
 
@@ -26,6 +28,8 @@ fun ProductDto.toPizzaItem(): PizzaItem {
         category = toPizzaItemCategory(category),
         priceUsd = priceUsd ?: 0.0,
         priceBySize = priceBySize ?: emptyMap(),
+        priceByWeight = priceByWeight ?: emptyMap(),
+        priceByPortion = priceByPortion ?: emptyMap(),
         visible = visible // 👈 asegúrate de propagar el campo visible
     )
 }
