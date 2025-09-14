@@ -6,9 +6,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mordisko.ui.theme.lightOrange
+import com.example.mordisko.ui.theme.orange
 
 @Composable
 fun ForgotPasswordScreen(
@@ -30,7 +33,9 @@ fun ForgotPasswordScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(text = "Recuperar contraseña",
-                style = MaterialTheme.typography.headlineSmall)
+                style = MaterialTheme.typography.headlineSmall,
+                color = orange
+                )
 
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -39,7 +44,13 @@ fun ForgotPasswordScreen(
                 onValueChange = { viewModel.onEmailChanged(it) },
                 label = { Text("Correo electrónico") },
                 modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = orange,
+                    unfocusedBorderColor = lightOrange,
+                    focusedLabelColor = orange,
+                    cursorColor = orange
+                )
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -47,14 +58,23 @@ fun ForgotPasswordScreen(
             Button(
                 onClick = { viewModel.onSendRecoveryEmail() },
                 enabled = !isLoading,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = orange,
+                    contentColor = Color.White,
+                    disabledContainerColor = orange.copy(alpha = 0.35f),
+                    disabledContentColor = Color.White.copy(alpha = 0.8f)
+                )
             ) {
                 Text(text = if (isLoading) "Enviando..." else "Enviar correo")
             }
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            TextButton(onClick = onBackToLogin) {
+            TextButton(
+                onClick = onBackToLogin,
+                colors = ButtonDefaults.textButtonColors(contentColor = orange)
+                ) {
                 Text("Volver al inicio de sesión")
             }
         }
@@ -65,7 +85,10 @@ fun ForgotPasswordScreen(
         AlertDialog(
             onDismissRequest = { viewModel.clearMessage() },
             confirmButton = {
-                TextButton(onClick = { viewModel.clearMessage() }) {
+                TextButton(
+                    onClick = { viewModel.clearMessage() },
+                    colors = ButtonDefaults.textButtonColors(contentColor = orange)
+                    ) {
                     Text("OK")
                 }
             },

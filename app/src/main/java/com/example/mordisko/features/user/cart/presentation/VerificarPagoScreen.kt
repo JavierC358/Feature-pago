@@ -84,7 +84,7 @@ fun VerificarPagoScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Suministra la información exacta de tu pago",
+                        text = "Suministra la información exacta de tu pago para verificarlo.",
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
                         color = orange

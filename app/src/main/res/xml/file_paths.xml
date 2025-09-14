@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths xmlns:android="http://schemas.android.com/apk/res/android">
-    <external-files-path
-        name="external_files"
-        path="." />
+    <!-- Para lo que estamos usando ahora -->
+    <cache-path name="cache" path="." />
+    <!-- Si además compartes desde external files, puedes dejar esto también -->
+    <!-- <external-files-path name="external" path=".""/> -->
 </paths>
 

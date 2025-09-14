@@ -7,9 +7,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -19,11 +21,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mordisko.ui.theme.lightOrange
+import com.example.mordisko.ui.theme.orange
 
 @Composable
 fun RegisterScreen(
@@ -52,7 +57,13 @@ fun RegisterScreen(
             label = { Text("Correo electrónico") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = orange,
+                unfocusedBorderColor = lightOrange,
+                focusedLabelColor = orange,
+                cursorColor = orange
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -78,8 +89,13 @@ fun RegisterScreen(
                 VisualTransformation.None
             } else {
                 PasswordVisualTransformation()
-            }
-
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = orange,
+                unfocusedBorderColor = lightOrange,
+                focusedLabelColor = orange,
+                cursorColor = orange
+            )
         )
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -105,7 +121,13 @@ fun RegisterScreen(
                 VisualTransformation.None
             } else {
                 PasswordVisualTransformation()
-            }
+            },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = orange,
+                unfocusedBorderColor = lightOrange,
+                focusedLabelColor = orange,
+                cursorColor = orange
+            )
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -118,7 +140,13 @@ fun RegisterScreen(
                 )
             },
             enabled = isEnabled,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = orange,
+                contentColor = Color.White,
+                disabledContainerColor = orange.copy(alpha = 0.35f),
+                disabledContentColor = Color.White.copy(alpha = 0.8f)
+            )
         ) {
             Text("Registrarse")
         }

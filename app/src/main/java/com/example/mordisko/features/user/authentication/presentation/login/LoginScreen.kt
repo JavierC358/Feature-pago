@@ -12,14 +12,21 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.mordisko.R
 import com.example.mordisko.core.navigation.Routes
 import com.example.mordisko.features.user.authentication.presentation.google.GoogleAuthViewModel
+import com.example.mordisko.ui.theme.lightOrange
+import com.example.mordisko.ui.theme.orange
+
+
 
 @Composable
 fun LoginScreen(
@@ -88,7 +95,7 @@ fun LoginScreen(
             Text(
                 text = "Bienvenido a Mordisko",
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary
+                color = orange
             )
 
             OutlinedTextField(
@@ -97,7 +104,13 @@ fun LoginScreen(
                 label = { Text("Correo electrónico") },
                 modifier = Modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.medium,
-                singleLine = true
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = orange,
+                    unfocusedBorderColor = lightOrange,
+                    focusedLabelColor = orange,
+                    cursorColor = orange
+                )
             )
 
             OutlinedTextField(
@@ -114,7 +127,14 @@ fun LoginScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(imageVector = icon, contentDescription = desc)
                     }
-                }
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = orange,
+                    unfocusedBorderColor = lightOrange,
+                    focusedLabelColor = orange,
+                    cursorColor = orange
+                )
+
             )
 
             Button(
@@ -123,7 +143,14 @@ fun LoginScreen(
                 },
                 enabled = isLoginEnabled,
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = orange,
+                    contentColor = Color.White,
+                    disabledContainerColor = orange.copy(alpha = 0.35f),
+                    disabledContentColor = Color.White.copy(alpha = 0.8f)
+                )
+
             ) {
                 Text("Iniciar sesión")
             }
@@ -136,7 +163,9 @@ fun LoginScreen(
                 Text("¿No tienes una cuenta? Regístrate")
             }
 
-            Divider(modifier = Modifier.padding(vertical = 8.dp))
+            Divider(modifier = Modifier.padding(vertical = 8.dp),
+                color = lightOrange.copy(alpha = 0.6f)
+                )
 
             Button(
                 onClick = {
@@ -145,13 +174,32 @@ fun LoginScreen(
                 },
                 enabled = !isLoading,
                 modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large
+                shape = MaterialTheme.shapes.large,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = lightOrange,
+                    contentColor = Color.Black,
+                    disabledContainerColor = lightOrange.copy(alpha = 0.5f),
+                    disabledContentColor = Color.Black.copy(alpha = 0.7f)
+                )
             ) {
                 if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = orange,
+                        trackColor = lightOrange.copy(alpha = 0.3f)
+                        )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Iniciando con Google...")
                 } else {
+
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_google),
+                        contentDescription = "Google",
+                        tint = Color.Unspecified,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Text("Continuar con Google")
                 }
             }
@@ -163,7 +211,9 @@ fun LoginScreen(
                 title = { Text("Error de inicio de sesión") },
                 text = { Text(error) },
                 confirmButton = {
-                    TextButton(onClick = { googleAuthViewModel.clearError() }) {
+                    TextButton(onClick = { googleAuthViewModel.clearError() },
+                        colors = ButtonDefaults.textButtonColors(contentColor = orange)
+                        ) {
                         Text("Volver al login")
                     }
                 },

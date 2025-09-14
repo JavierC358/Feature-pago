@@ -4,15 +4,21 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.AggregateSource
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Query
 import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.math.ceil
+import kotlin.math.max
 
 @HiltViewModel
 class AdminViewModel @Inject constructor(
@@ -21,10 +27,14 @@ class AdminViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AdminVerificacionesState())
-    val state = _state.asStateFlow()
+    val state: StateFlow<AdminVerificacionesState> = _state.asStateFlow()
 
     private val _exchangeRate = MutableStateFlow(0.0)
     val exchangeRate: StateFlow<Double> = _exchangeRate
+
+    // cursores por página: index 1 -> cursor null (página 1), index N -> lastDoc de la pág (N-1)
+    private val pageCursors: MutableList<DocumentSnapshot?> = mutableListOf(null)
+    private var isLoadingPage = false
 
     init {
         Log.d("TEST_INIT", "Entrando al init del AdminViewModel")
@@ -46,96 +56,86 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    /** --- Paginación pública --- */
+
     fun loadVerificaciones() {
+        // Carga inicial con el pageSize actual (página 1)
+        onChangePageSize(state.value.pageSize)
+    }
+
+    fun onChangePageSize(newSize: Int) {
+        if (newSize <= 0) return
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _state.update { it.copy(isLoading = true, pageSize = newSize, currentPage = 1) }
+            pageCursors.clear(); pageCursors.add(null)
 
-            val result = mutableListOf<VerificacionPago>()
+            val totalCount = getTotalOrdersCount()
+            val totalPages = calcTotalPages(totalCount, newSize)
 
-            try {
-                val orders = firestore.collection("orders")
-                    .get()
-                    .await()
+            val (list, last) = getOrdersPage(newSize.toLong(), null)
+            if (pageCursors.size <= 1) pageCursors.add(last) else pageCursors[1] = last
 
-                for (order in orders.documents) {
-                    val orderId = order.id
-
-                    val pagoDoc = firestore.collection("orders")
-                        .document(orderId)
-                        .collection("payment_verification")
-                        .document("info")
-                        .get()
-                        .await()
-
-                    if (pagoDoc.exists()) {
-                        // Caso Pago Móvil con subcolección
-                        val data = pagoDoc.data
-                        if (data != null) {
-                            result.add(
-                                VerificacionPago(
-                                    orderNumber = orderId,
-                                    amountPaid = data["amountPaid"]?.toString() ?: "",
-                                    referenceLast4 = data["referenceLast4"]?.toString() ?: "",
-                                    phoneNumber = data["phoneNumber"]?.toString() ?: "",
-                                    status = data["status"]?.toString()
-                                        ?: order.getString("paymentStatus")
-                                        ?: "pendiente"
-                                )
-                            )
-                        }
-                    } else {
-                        // Caso Efectivo o Punto de Venta (sin subcolección)
-                        val status = order.getString("paymentStatus") ?: "pendiente"
-                        result.add(
-                            VerificacionPago(
-                                orderNumber = orderId,
-                                amountPaid = order.getDouble("totalBs")?.toString() ?: "",
-                                referenceLast4 = "--",
-                                phoneNumber = "--",
-                                status = status
-                            )
-                        )
-                    }
-                }
-
-                _state.value = AdminVerificacionesState(
-                    verificaciones = result,
-                    isLoading = false
+            _state.update {
+                it.copy(
+                    verificaciones = list,
+                    isLoading = false,
+                    totalCount = totalCount,
+                    totalPages = totalPages,
+                    currentPage = 1
                 )
-            } catch (e: Exception) {
-                Log.e("AdminViewModel", "Error cargando verificaciones", e)
-                _state.value = _state.value.copy(isLoading = false)
             }
         }
     }
 
+    fun nextPage() {
+        val s = state.value
+        val next = s.currentPage + 1
+        if (next > s.totalPages || s.isLoading) return
+        loadPage(next)
+    }
+
+    fun prevPage() {
+        val s = state.value
+        val prev = s.currentPage - 1
+        if (prev < 1 || s.isLoading) return
+        loadPage(prev)
+    }
+
+    /** --- Acciones --- */
+
     fun marcarComoVerificada(orderNumber: String) {
         viewModelScope.launch {
             try {
-                // Actualiza la subcolección si existe
-                val pagoDocRef = firestore.collection("orders")
-                    .document(orderNumber)
-                    .collection("payment_verification")
-                    .document("info")
+                val orderRef = firestore.collection("orders").document(orderNumber)
+                val infoRef = orderRef.collection("payment_verification").document("info")
 
-                val pagoDoc = pagoDocRef.get().await()
-                if (pagoDoc.exists()) {
-                    pagoDocRef.update("status", "verificado").await()
+                // 1) Actualiza SIEMPRE el campo principal (esto es lo que usan tus reportes)
+                orderRef.update("paymentStatus", "verificado").await()
+
+                // 2) Actualiza/crea la subcolección (para que la UI admin también quede pareja)
+                val infoSnap = infoRef.get().await()
+                if (infoSnap.exists()) {
+                    infoRef.update("status", "verificado").await()
+                } else {
+                    // si nunca hubo pago móvil, creamos un registro mínimo
+                    infoRef.set(
+                        mapOf(
+                            "status" to "verificado"
+                            // puedes incluir más campos si quieres trazabilidad
+                        )
+                    ).await()
                 }
 
-                // Actualiza el campo paymentStatus en la orden
-                firestore.collection("orders")
-                    .document(orderNumber)
-                    .update("paymentStatus", "verificado")
-                    .await()
-
-                // Recargar para reflejar cambios
-                loadVerificaciones()
+                // 3) Recargar la página actual (sin perder paginación)
+                val current = state.value.currentPage
+                loadPage(current) // si no tienes paginación aquí, usa loadVerificaciones()
             } catch (e: Exception) {
                 Log.e("AdminViewModel", "Error marcando como verificada", e)
             }
         }
     }
+
+    /** --- Tasa de cambio (sin cambios) --- */
 
     fun loadExchangeRate() {
         viewModelScope.launch {
@@ -174,11 +174,151 @@ class AdminViewModel @Inject constructor(
             }
         }
     }
+
+    /** --- Internos de paginación --- */
+
+    private fun calcTotalPages(total: Long, size: Int): Int =
+        if (size <= 0) 1 else max(1, ceil(total.toDouble() / size).toInt())
+
+    private fun loadPage(page: Int) {
+        if (isLoadingPage) return
+        isLoadingPage = true
+        _state.update { it.copy(isLoading = true) }
+
+        viewModelScope.launch {
+            try {
+                val s = state.value
+                val size = s.pageSize.toLong()
+
+                // Cursor para página N = lastDoc de la página N-1
+                val cursor = if (page - 1 < pageCursors.size) {
+                    pageCursors[page - 1]
+                } else {
+                    // Si intentan saltar, avanzamos precalculando cursores
+                    var c: DocumentSnapshot? = pageCursors.last()
+                    var p = pageCursors.size
+                    while (p < page) {
+                        val (_, last) = getOrdersPage(size, c)
+                        pageCursors.add(last)
+                        c = last
+                        p++
+                        if (last == null) break
+                    }
+                    pageCursors.getOrNull(page - 1)
+                }
+
+                val (list, last) = getOrdersPage(size, cursor)
+                if (pageCursors.size <= page) pageCursors.add(last) else pageCursors[page] = last
+
+                _state.update {
+                    it.copy(
+                        verificaciones = list,
+                        isLoading = false,
+                        currentPage = page
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error loadPage($page): ${e.message}", e)
+                _state.update { it.copy(isLoading = false) }
+            } finally {
+                isLoadingPage = false
+            }
+        }
+    }
+
+    private suspend fun getTotalOrdersCount(): Long {
+        return try {
+            firestore.collection("orders")
+                .count()
+                .get(AggregateSource.SERVER)
+                .await()
+                .count
+        } catch (e: Exception) {
+            Log.e("AdminViewModel", "count() fallo: ${e.message}", e)
+            0L
+        }
+    }
+
+    private suspend fun getOrdersPage(
+        pageSize: Long,
+        lastDoc: DocumentSnapshot?
+    ): Pair<List<VerificacionPago>, DocumentSnapshot?> {
+        // Orders ordenadas por timestamp DESC
+        var q = firestore.collection("orders")
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(pageSize)
+
+        if (lastDoc != null) q = q.startAfter(lastDoc)
+
+        val snap = q.get().await()
+        val docs = snap.documents
+
+        val result = mutableListOf<VerificacionPago>()
+
+        for (order in docs) {
+            val orderId = order.id
+
+            // ⬇️ AQUÍ va el bloque con normalización (reemplaza al que tenías)
+            val pagoDoc = firestore.collection("orders")
+                .document(orderId)
+                .collection("payment_verification")
+                .document("info")
+                .get()
+                .await()
+
+            if (pagoDoc.exists()) {
+                val data = pagoDoc.data
+                if (data != null) {
+                    result.add(
+                        VerificacionPago(
+                            orderNumber   = orderId,
+                            amountPaid    = data["amountPaid"]?.toString() ?: "",
+                            referenceLast4= data["referenceLast4"]?.toString() ?: "",
+                            phoneNumber   = data["phoneNumber"]?.toString() ?: "",
+                            // 🔸 Normalizamos: primero subcolección; si no, el campo principal
+                            status        = normalizeStatus(
+                                data["status"]?.toString() ?: order.getString("paymentStatus")
+                            )
+                        )
+                    )
+                }
+            } else {
+                // 🔸 Normalizamos el campo principal cuando no hay subcolección
+                val status = normalizeStatus(order.getString("paymentStatus"))
+                result.add(
+                    VerificacionPago(
+                        orderNumber   = orderId,
+                        amountPaid    = order.getDouble("totalBs")?.toString() ?: "",
+                        referenceLast4= "--",
+                        phoneNumber   = "--",
+                        status        = status
+                    )
+                )
+            }
+        }
+
+        val newLast = docs.lastOrNull()
+        return Pair(result, newLast)
+    }
 }
 
+private fun normalizeStatus(s: String?): String {
+    val v = s?.trim()?.lowercase() ?: ""
+    return when {
+        "verific" in v -> "verificado"
+        "pend" in v    -> "pendiente"
+        else           -> "en verificacion"
+    }
+}
+
+/** --- State y modelo: se agregan campos para paginación visible --- */
 data class AdminVerificacionesState(
     val isLoading: Boolean = false,
-    val verificaciones: List<VerificacionPago> = emptyList()
+    val verificaciones: List<VerificacionPago> = emptyList(),
+    val pageSize: Int = 10,          // Reg… (5/10/20)
+    val currentPage: Int = 1,        // 1-based
+    val totalPages: Int = 1,         // calculado con count()
+    val totalCount: Long = 0L        // opcional, por si quieres “1–10 de N”
 )
 
 data class VerificacionPago(
