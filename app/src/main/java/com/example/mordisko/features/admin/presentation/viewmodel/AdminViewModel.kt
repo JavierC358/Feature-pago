@@ -229,6 +229,7 @@ class AdminViewModel @Inject constructor(
     private suspend fun getTotalOrdersCount(): Long {
         return try {
             firestore.collection("orders")
+                .whereEqualTo("paymentStatus", "por_verificar")
                 .count()
                 .get(AggregateSource.SERVER)
                 .await()
@@ -238,13 +239,12 @@ class AdminViewModel @Inject constructor(
             0L
         }
     }
-
     private suspend fun getOrdersPage(
         pageSize: Long,
         lastDoc: DocumentSnapshot?
     ): Pair<List<VerificacionPago>, DocumentSnapshot?> {
-        // Orders ordenadas por timestamp DESC
         var q = firestore.collection("orders")
+            .whereEqualTo("paymentStatus", "por_verificar")  // 👈 FILTRO CLAVE
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .limit(pageSize)
 
@@ -254,11 +254,8 @@ class AdminViewModel @Inject constructor(
         val docs = snap.documents
 
         val result = mutableListOf<VerificacionPago>()
-
         for (order in docs) {
             val orderId = order.id
-
-            // ⬇️ AQUÍ va el bloque con normalización (reemplaza al que tenías)
             val pagoDoc = firestore.collection("orders")
                 .document(orderId)
                 .collection("payment_verification")
@@ -271,34 +268,32 @@ class AdminViewModel @Inject constructor(
                 if (data != null) {
                     result.add(
                         VerificacionPago(
-                            orderNumber   = orderId,
-                            amountPaid    = data["amountPaid"]?.toString() ?: "",
-                            referenceLast4= data["referenceLast4"]?.toString() ?: "",
-                            phoneNumber   = data["phoneNumber"]?.toString() ?: "",
-                            // 🔸 Normalizamos: primero subcolección; si no, el campo principal
-                            status        = normalizeStatus(
-                                data["status"]?.toString() ?: order.getString("paymentStatus")
-                            )
+                            orderNumber     = orderId,
+                            amountPaid      = data["amountPaid"]?.toString()
+                                ?: (order.getDouble("totalBs")?.toString() ?: ""),
+                            referenceLast4  = data["referenceLast4"]?.toString() ?: "--",
+                            phoneNumber     = data["phoneNumber"]?.toString() ?: "--",
+                            status          = "por_verificar"
                         )
                     )
                 }
             } else {
-                // 🔸 Normalizamos el campo principal cuando no hay subcolección
-                val status = normalizeStatus(order.getString("paymentStatus"))
+                // Si por alguna razón no hay subdoc, igual no debería pasar el filtro,
+                // pero dejamos un fallback básico:
                 result.add(
                     VerificacionPago(
-                        orderNumber   = orderId,
-                        amountPaid    = order.getDouble("totalBs")?.toString() ?: "",
-                        referenceLast4= "--",
-                        phoneNumber   = "--",
-                        status        = status
+                        orderNumber     = orderId,
+                        amountPaid      = order.getDouble("totalBs")?.toString() ?: "",
+                        referenceLast4  = "--",
+                        phoneNumber     = "--",
+                        status          = "por_verificar"
                     )
                 )
             }
         }
 
         val newLast = docs.lastOrNull()
-        return Pair(result, newLast)
+        return result to newLast
     }
 }
 

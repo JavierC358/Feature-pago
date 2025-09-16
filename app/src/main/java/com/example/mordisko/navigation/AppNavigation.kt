@@ -20,8 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -40,10 +38,10 @@ import com.example.mordisko.core.navigation.Routes.ACTUALIZAR_IMAGENES_SCREEN
 import com.example.mordisko.core.navigation.Routes.EDIT_PRICES_SCREEN
 import com.example.mordisko.core.navigation.Routes.GESTIONAR_PRODUCTOS_SCREEN
 import com.example.mordisko.core.navigation.Routes.REPORTES_FECHA_SCREEN
-import com.example.mordisko.core.navigation.Routes.ROUTE_ADMIN_CATEGORIES
 import com.example.mordisko.core.navigation.Routes.VERIFICAR_ORDENES_SCREEN
 import com.example.mordisko.core.navigation.Routes.crearProductoRoute
 import com.example.mordisko.features.admin.categories.presentation.AdminCategoriesScreen
+import com.example.mordisko.features.admin.presentation.viewmodel.PaymentVerificationViewModel
 import com.example.mordisko.features.admin.presentation.screens.ActualizarImagenesScreen
 import com.example.mordisko.features.admin.presentation.screens.ActualizarTasaScreen
 import com.example.mordisko.features.admin.presentation.screens.AdminDashboardScreen
@@ -69,7 +67,6 @@ import com.example.mordisko.features.user.authentication.presentation.login.Term
 import com.example.mordisko.features.user.authentication.presentation.splash.SplashScreen
 import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
-import com.example.mordisko.features.user.delivery.presentation.screen.DeliveryScreen
 import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
 import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
 import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen
@@ -78,6 +75,7 @@ import com.example.mordisko.features.user.cart.presentation.PedidoVerificadoScre
 import com.example.mordisko.features.user.cart.presentation.VerificarPagoScreen
 import com.example.mordisko.features.user.cart.presentation.maps.MapScreen
 import com.example.mordisko.features.user.dashboard.screen.OrdersStatsScreen
+import com.example.mordisko.features.user.delivery.presentation.screen.DeliveryScreen
 import com.example.mordisko.features.user.history.presentation.screen.HistoryScreen
 import com.example.mordisko.features.user.history.presentation.viewmodel.OrderHistoryViewModel
 import com.example.mordisko.features.user.home.HomeScreen
@@ -88,8 +86,6 @@ import com.example.mordisko.features.user.support.SupportScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import java.util.Date
 
 @Composable
@@ -356,7 +352,11 @@ fun AppNavigation(
 
             composable("${Routes.OrderStatus}/{orderNumber}/{montoTotal}") { backStackEntry ->
                 val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: "Desconocido"
-                val montoTotal = backStackEntry.arguments?.getString("montoTotal")?.toDoubleOrNull() ?: 0.0
+                val montoTotal = backStackEntry.arguments
+                    ?.getString("montoTotal")
+                    ?.replace(',', '.')   // ← admite "123,45" y "123.45"
+                    ?.toDoubleOrNull()
+                    ?: 0.0
 
                 OrderStatusScreen(
                     orderNumber = orderNumber,
@@ -378,11 +378,13 @@ fun AppNavigation(
             composable(Routes.VerificarPagoWithArg) { backStackEntry ->
                 val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
 
+                // 👇 usa el nombre/clase que REALMENTE tienes
+                val verifyVm: PaymentVerificationViewModel = hiltViewModel()
+
                 VerificarPagoScreen(
                     orderNumber = orderNumber,
-                    onCerrar = {
-                        navController.popBackStack()
-                    }
+                    onCerrar = { navController.popBackStack() },
+                    viewModel =  verifyVm
                 )
             }
 

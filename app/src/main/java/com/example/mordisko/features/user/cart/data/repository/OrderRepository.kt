@@ -1,9 +1,12 @@
 package com.example.mordisko.features.user.cart.data.repository
 
+import android.util.Log
 import com.example.mordisko.features.user.cart.domain.model.OrderModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 import java.util.Date
 import javax.inject.Inject
@@ -19,7 +22,8 @@ class OrderRepository @Inject constructor(
     suspend fun saveOrder(order: OrderModel): Result<String> {
         return try {
             val orderNumber = generateOrderNumber()
-            val userId = firebaseAuth.currentUser?.uid ?: return Result.failure(Exception("Usuario no autenticado"))
+            val userId = firebaseAuth.currentUser?.uid
+                ?: return Result.failure(Exception("Usuario no autenticado"))
 
             val now = Date()
             val firebaseTimestamp = Timestamp(now)
@@ -81,6 +85,58 @@ class OrderRepository @Inject constructor(
         val snapshot = counterDoc.get().await()
         if (!snapshot.exists()) {
             counterDoc.set(mapOf("value" to 0L)).await()
+        }
+    }
+
+    suspend fun submitPaymentVerification(
+        orderNumber: String,
+        amountBsInput: String,
+        referenceLast4: String,
+        payerPhone: String,
+        razonSocial: String?,
+        rif: String?,
+        direccion: String?
+    ): Result<Unit> {
+        return try {
+            val uid = firebaseAuth.currentUser?.uid ?: ""
+
+            val amount = amountBsInput.replace(',', '.').toDoubleOrNull() ?: 0.0
+
+            val batch = firestore.batch()
+            val orderRef = ordersCollection.document(orderNumber)
+            val infoRef = orderRef.collection("payment_verification").document("info")
+
+            // 1) estado principal
+            batch.update(orderRef, mapOf("paymentStatus" to "por_verificar"))
+
+            // 2) (opcional) datos de factura
+            val factura = mutableMapOf<String, Any>()
+            if (!razonSocial.isNullOrBlank() || !rif.isNullOrBlank() || !direccion.isNullOrBlank()) {
+                factura["deseaFactura"] = true
+                razonSocial?.let { factura["razonSocial"] = it }
+                rif?.let { factura["rif"] = it }
+                direccion?.let { factura["direccion"] = it }
+            }
+            if (factura.isNotEmpty()) batch.update(orderRef, factura)
+
+            // 3) subcolección para el admin
+            val infoData = mapOf(
+                "amountPaid" to amount,
+                "referenceLast4" to referenceLast4.trim(),
+                "phoneNumber" to payerPhone.trim(),
+                "status" to "por_verificar",
+                "submittedAt" to FieldValue.serverTimestamp(),
+                "submittedBy" to uid
+            )
+            batch.set(infoRef, infoData, SetOptions.merge())
+
+            Log.d("OrderRepo", "submitPaymentVerification: COMMIT… $orderNumber")
+            batch.commit().await()
+            Log.d("OrderRepo", "submitPaymentVerification: OK $orderNumber")
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("OrderRepo", "submitPaymentVerification: ERROR $orderNumber", e)
+            Result.failure(e)
         }
     }
 }
