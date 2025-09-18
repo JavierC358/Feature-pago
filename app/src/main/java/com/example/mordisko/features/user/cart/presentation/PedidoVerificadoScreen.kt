@@ -57,7 +57,7 @@ fun PedidoVerificadoScreen(
 
             Text(
                 text = "¡Pago Verificado!",
-                fontSize = 42.sp,
+                fontSize = 40.sp,
                 fontWeight = FontWeight.Bold,
                 color = orange
             )
@@ -66,7 +66,7 @@ fun PedidoVerificadoScreen(
 
             Text(
                 text = "✅ Tu pago ha sido confirmado exitosamente.",
-                fontSize = 16.sp
+                fontSize = 14.sp
             )
 
             Spacer(modifier = Modifier.height(8.dp))

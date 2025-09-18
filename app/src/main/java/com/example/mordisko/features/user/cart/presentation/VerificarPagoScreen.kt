@@ -13,13 +13,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mordisko.features.admin.presentation.viewmodel.PaymentVerificationViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun VerificarPagoScreen(
     orderNumber: String,
     onCerrar: () -> Unit,
-    viewModel: com.example.mordisko.features.admin.presentation.viewmodel.PaymentVerificationViewModel
+    onVerificacionEnviada: (String) -> Unit,   // ← NUEVO
+    viewModel: PaymentVerificationViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -44,7 +47,7 @@ fun VerificarPagoScreen(
         if (state.isSuccess) {
             snackbarHostState.showSnackbar("¡Verificación enviada con éxito!")
             viewModel.resetState()
-            onCerrar()
+            onVerificacionEnviada(orderNumber)  // ← en vez de onCerrar()
         }
     }
 

@@ -56,6 +56,12 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun setFilter(filter: OrdersFilter) {
+        if (state.value.filter == filter) return
+        _state.update { it.copy(filter = filter) }
+        onChangePageSize(state.value.pageSize) // resetea paginación con el filtro actual
+    }
+
     /** --- Paginación pública --- */
 
     fun loadVerificaciones() {
@@ -228,12 +234,12 @@ class AdminViewModel @Inject constructor(
 
     private suspend fun getTotalOrdersCount(): Long {
         return try {
-            firestore.collection("orders")
-                .whereEqualTo("paymentStatus", "por_verificar")
-                .count()
-                .get(AggregateSource.SERVER)
-                .await()
-                .count
+            val base = firestore.collection("orders")
+            val query = when (state.value.filter) {
+                OrdersFilter.POR_VERIFICAR -> base.whereEqualTo("paymentStatus", "por_verificar")
+                OrdersFilter.TODAS         -> base
+            }
+            query.count().get(AggregateSource.SERVER).await().count
         } catch (e: Exception) {
             Log.e("AdminViewModel", "count() fallo: ${e.message}", e)
             0L
@@ -243,10 +249,12 @@ class AdminViewModel @Inject constructor(
         pageSize: Long,
         lastDoc: DocumentSnapshot?
     ): Pair<List<VerificacionPago>, DocumentSnapshot?> {
-        var q = firestore.collection("orders")
-            .whereEqualTo("paymentStatus", "por_verificar")  // 👈 FILTRO CLAVE
-            .orderBy("timestamp", Query.Direction.DESCENDING)
-            .limit(pageSize)
+
+        var q: Query = firestore.collection("orders")
+        if (state.value.filter == OrdersFilter.POR_VERIFICAR) {
+            q = q.whereEqualTo("paymentStatus", "por_verificar") // 👈 como antes
+        }
+        q = q.orderBy("timestamp", Query.Direction.DESCENDING).limit(pageSize)
 
         if (lastDoc != null) q = q.startAfter(lastDoc)
 
@@ -273,20 +281,20 @@ class AdminViewModel @Inject constructor(
                                 ?: (order.getDouble("totalBs")?.toString() ?: ""),
                             referenceLast4  = data["referenceLast4"]?.toString() ?: "--",
                             phoneNumber     = data["phoneNumber"]?.toString() ?: "--",
-                            status          = "por_verificar"
+                            status          = normalizeStatus(
+                                data["status"]?.toString() ?: order.getString("paymentStatus")
+                            )
                         )
                     )
                 }
             } else {
-                // Si por alguna razón no hay subdoc, igual no debería pasar el filtro,
-                // pero dejamos un fallback básico:
                 result.add(
                     VerificacionPago(
                         orderNumber     = orderId,
                         amountPaid      = order.getDouble("totalBs")?.toString() ?: "",
                         referenceLast4  = "--",
                         phoneNumber     = "--",
-                        status          = "por_verificar"
+                        status          = normalizeStatus(order.getString("paymentStatus"))
                     )
                 )
             }
@@ -300,11 +308,14 @@ class AdminViewModel @Inject constructor(
 private fun normalizeStatus(s: String?): String {
     val v = s?.trim()?.lowercase() ?: ""
     return when {
-        "verific" in v -> "verificado"
-        "pend" in v    -> "pendiente"
-        else           -> "en verificacion"
+        v == "por_verificar" -> "por_verificar"   // ⬅️ manejar primero este estado
+        "verific" in v       -> "verificado"      // "verificado", "verificada", etc.
+        "pend" in v          -> "pendiente"
+        else                 -> v                 // deja cualquier otro valor tal cual
     }
 }
+
+enum class OrdersFilter { POR_VERIFICAR, TODAS }
 
 /** --- State y modelo: se agregan campos para paginación visible --- */
 data class AdminVerificacionesState(
@@ -313,7 +324,8 @@ data class AdminVerificacionesState(
     val pageSize: Int = 10,          // Reg… (5/10/20)
     val currentPage: Int = 1,        // 1-based
     val totalPages: Int = 1,         // calculado con count()
-    val totalCount: Long = 0L        // opcional, por si quieres “1–10 de N”
+    val totalCount: Long = 0L,       // opcional
+    val filter: OrdersFilter = OrdersFilter.POR_VERIFICAR  // 👈 por defecto
 )
 
 data class VerificacionPago(

@@ -15,6 +15,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mordisko.core.navigation.Routes
 import com.example.mordisko.features.admin.presentation.viewmodel.AdminViewModel
+import com.example.mordisko.features.admin.presentation.viewmodel.OrdersFilter
 import com.example.mordisko.ui.theme.lightOrange
 import com.example.mordisko.ui.theme.orange
 
@@ -52,19 +53,39 @@ fun AdminVerificacionesScreen(
             if (state.isLoading && state.verificaciones.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.padding(16.dp), color = orange)
             } else {
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = state.filter == OrdersFilter.POR_VERIFICAR,
+                        onClick = { viewModel.setFilter(OrdersFilter.POR_VERIFICAR) },
+                        label = { Text("Por verificar") }
+                    )
+                    FilterChip(
+                        selected = state.filter == OrdersFilter.TODAS,
+                        onClick = { viewModel.setFilter(OrdersFilter.TODAS) },
+                        label = { Text("Historial") }
+                    )
+                }
+
                 LazyColumn(modifier = Modifier.weight(1f)) {
-                    items(state.verificaciones) { item ->
+
+                    items(state.verificaciones) { order ->
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(8.dp)
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
-                                Text("Orden: ${item.orderNumber}")
-                                Text("Monto: Bs ${item.amountPaid}")
-                                Text("Ref: ${item.referenceLast4}")
-                                Text("Tel: ${item.phoneNumber}")
-                                Text("Estado: ${item.status}")
+                                Text("Orden: ${order.orderNumber}")
+                                Text("Monto: Bs ${order.amountPaid}")
+                                Text("Ref: ${order.referenceLast4}")
+                                Text("Tel: ${order.phoneNumber}")
+                                Text("Estado: ${order.status}")
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Row(
@@ -73,15 +94,17 @@ fun AdminVerificacionesScreen(
                                 ) {
                                     Button(
                                         onClick = {
-                                            navController.navigate("order_detail/${item.orderNumber}")
+                                            navController.navigate("order_detail/${order.orderNumber}")
                                         },
                                         modifier = Modifier.weight(1f),
                                         colors = ButtonDefaults.buttonColors(containerColor = orange)
                                     ) { Text("Ver Detalles") }
 
-                                    if (item.status.lowercase() != "verificado") {
+                                    if (state.filter == OrdersFilter.POR_VERIFICAR &&
+                                        order.status.lowercase() != "verificado"
+                                    ) {
                                         Button(
-                                            onClick = { viewModel.marcarComoVerificada(item.orderNumber) },
+                                            onClick = { viewModel.marcarComoVerificada(order.orderNumber) },
                                             modifier = Modifier.weight(1f),
                                             colors = ButtonDefaults.buttonColors(containerColor = orange)
                                         ) { Text("Marcar como verificada") }
@@ -120,6 +143,7 @@ fun AdminVerificacionesScreen(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

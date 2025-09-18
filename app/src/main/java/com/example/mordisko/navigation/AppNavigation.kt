@@ -69,6 +69,7 @@ import com.example.mordisko.features.user.cart.presentation.CartScreen
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.cart.presentation.OrderStatusScreen
 import com.example.mordisko.features.user.cart.presentation.OrderSummaryScreen
+import com.example.mordisko.features.user.cart.presentation.PagoEnVerificacionScreen
 import com.example.mordisko.features.user.cart.presentation.PaymentMethodScreen
 import com.example.mordisko.features.user.cart.presentation.PedidoEnProcesoScreen
 import com.example.mordisko.features.user.cart.presentation.PedidoVerificadoScreen
@@ -378,13 +379,17 @@ fun AppNavigation(
             composable(Routes.VerificarPagoWithArg) { backStackEntry ->
                 val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
 
-                // 👇 usa el nombre/clase que REALMENTE tienes
-                val verifyVm: PaymentVerificationViewModel = hiltViewModel()
-
                 VerificarPagoScreen(
                     orderNumber = orderNumber,
-                    onCerrar = { navController.popBackStack() },
-                    viewModel =  verifyVm
+                    onCerrar = { navController.popBackStack() }, // ← sigue cerrando normal
+                    onVerificacionEnviada = { ord ->
+                        navController.navigate("payment_pending/$ord") {
+                            // Opcional: limpia el form del back stack si quieres
+                            // popUpTo(Routes.VerificarPagoWithArg) { inclusive = true }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
 
@@ -455,6 +460,14 @@ fun AppNavigation(
             composable("pedido_verificado") {
                 PedidoVerificadoScreen(
                     cartViewModel = cartViewModel, // ✅ inyectado correctamente
+                    navController = navController
+                )
+            }
+
+            composable("payment_pending/{orderNumber}") { backStackEntry ->
+                val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
+                PagoEnVerificacionScreen(
+                    orderNumber = orderNumber,
                     navController = navController
                 )
             }
