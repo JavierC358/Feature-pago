@@ -96,9 +96,11 @@ fun MapScreen(
 
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(latLng, 17f)
                 mapReady = true
+                markerFlow.tryEmit(latLng)
             } catch (_: Exception) {
                 cameraPositionState.position = CameraPosition.fromLatLngZoom(defaultLatLng, 17f)
                 mapReady = true
+                markerFlow.tryEmit(defaultLatLng)
             }
         }
     }
