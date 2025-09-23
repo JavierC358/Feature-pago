@@ -157,7 +157,7 @@ fun DeliveryScreen(
         // 🍽️ Opción Consumo en tienda
         DeliveryOptionCard(
             icon = Icons.Default.LocalDining,
-            title = "Consumo en tienda",
+            title = "Consumo en el local",
             isSelected = selectedOption == DeliveryOption.EnTienda,
             onClick = {
                 viewModel.onOptionSelected(DeliveryOption.EnTienda)
@@ -172,7 +172,7 @@ fun DeliveryScreen(
         // 🏪 Opción Retiro en tienda
         DeliveryOptionCard(
             icon = Icons.Default.Store,
-            title = "Retiro en tienda",
+            title = "Retiro en el local",
             isSelected = selectedOption == DeliveryOption.Retiro,
             onClick = {
                 viewModel.onOptionSelected(DeliveryOption.Retiro)

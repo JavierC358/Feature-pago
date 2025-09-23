@@ -48,7 +48,7 @@ fun PizzaCard(
                 text = pizza.name,
                 color = nameColor,
                 fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
+                fontSize = 14.sp,
                 modifier = Modifier.padding(top = 8.dp)
             )
 

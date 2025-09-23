@@ -129,11 +129,11 @@ fun HorarioScreen(
 
             // Logo
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.logo4a),
                 contentDescription = "Logo",
                 modifier = Modifier
-                    .size(200.dp)
-                    .clip(CircleShape)
+                    .size(180.dp)
+                    //.clip(CircleShape)
                     .padding(8.dp)
             )
 
@@ -153,9 +153,9 @@ fun HorarioScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf(
-                    "Martes a Viernes:" to "09:00 AM - 02:00 PM",
-                    "Sábado:" to "09:00 AM - 03:00 PM",
-                    "Domingo:" to "09:00 AM - 02:00 PM"
+                    "Martes a Viernes:" to "11:00 AM - 09:00 PM",
+                    "Sábado:" to "10:00 AM - 09:00 PM",
+                    "Domingo:" to "09:00 AM - 06:00 PM"
                 ).forEach { (dia, hora) ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
@@ -179,7 +179,7 @@ fun HorarioScreen(
             Spacer(modifier = Modifier.height(20.dp))
 
             Text(
-                text = "📍 Calle Santa Teresa c/c Calle 1ero de Mayo, San José de Guanipa.",
+                text = "📍 Calle Santa Teresa c/c Calle 1ero de Mayo Numero 100, San José de Guanipa.",
                 fontSize = 14.sp,
                 color = Color.White
             )
