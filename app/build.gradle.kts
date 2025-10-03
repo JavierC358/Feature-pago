@@ -4,8 +4,6 @@ plugins {
     id("org.jetbrains.kotlin.kapt")
     alias(libs.plugins.androidHilt)
     alias(libs.plugins.googleServices)
-
-    id ("dagger.hilt.android.plugin")
     id("com.google.firebase.crashlytics")
 }
 
@@ -17,8 +15,8 @@ android {
         applicationId = "com.example.mordisko"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -33,15 +31,32 @@ android {
 
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("C:/Users/javie/upload-keystore.jks")
+            storePassword = System.getenv("UPLOAD_STORE_PASSWORD")
+            keyAlias = "upload"
+            keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // ASOCIA la firma de release
+            signingConfig = signingConfigs.getByName("release")
+
+            // Recomendado para producción
+            isMinifyEnabled = true
+            isShrinkResources = true
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
         }
+
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -67,6 +82,7 @@ android {
             java.srcDirs("src/main/java")
         }
     }
+
 }
 
 dependencies {

@@ -205,7 +205,7 @@ fun HorarioScreen(
                         withStyle(style = SpanStyle(textDecoration = TextDecoration.Underline, color = Color.White)) {
                             append("términos y condiciones")
                         }
-                        append(" de uso de Mordisko.")
+                        append(" de uso de Sazón.")
                     },
                     modifier = Modifier.clickable { onTerminos() },
                     color = Color.White,

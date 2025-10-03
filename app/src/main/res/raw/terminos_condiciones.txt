@@ -1,21 +1,21 @@
-TÉRMINOS Y CONDICIONES DE USO DE LA APLICACIÓN MORDISKO
+TÉRMINOS Y CONDICIONES DE USO DE LA APLICACIÓN SAZÓN
 
 1. ACEPTACIÓN DE LOS TÉRMINOS
-Al acceder y utilizar la aplicación Mordisko, el usuario acepta cumplir con los presentes Términos y Condiciones. Si no está de acuerdo, deberá abstenerse de utilizar la aplicación.
+Al acceder y utilizar la aplicación Sazón, el usuario acepta cumplir con los presentes Términos y Condiciones. Si no está de acuerdo, deberá abstenerse de utilizar la aplicación.
 
 2. DESCRIPCIÓN DEL SERVICIO
-Mordisko es una aplicación móvil que permite a los usuarios:
+Sazón es una aplicación móvil que permite a los usuarios:
 
-Consultar el menú de pizzas y otros productos del restaurante.
+Consultar el menú de pizzas y otros productos del local.
 
-Realizar pedidos en línea para entrega a domicilio, retiro en tienda o consumo en el local.
+Realizar pedidos en línea para entrega a domicilio, retiro en el local o consumo en el local.
 
 Procesar pagos y verificar transacciones.
 
 Realizar seguimiento del estado de sus pedidos.
 
 3. REGISTRO Y USO DE DATOS
-Para realizar pedidos, el usuario debe registrarse proporcionando información veraz y actualizada. Mordisko se compromete a proteger sus datos de acuerdo con la legislación vigente en materia de privacidad.
+Para realizar pedidos, el usuario debe registrarse proporcionando información veraz y actualizada. Sazón se compromete a proteger sus datos de acuerdo con la legislación vigente en materia de privacidad.
 
 4. MÉTODOS DE PAGO
 Los pagos podrán realizarse mediante los métodos disponibles en la aplicación, como:
@@ -32,24 +32,24 @@ Los datos del pago móvil deben ser verificados por el administrador, y el usuar
 Los precios están expresados en bolívares y dólares (de ser aplicable), e incluyen los impuestos correspondientes. Los productos están sujetos a disponibilidad y pueden cambiar sin previo aviso.
 
 6. POLÍTICA DE CANCELACIÓN Y REEMBOLSOS
-Una vez confirmado el pedido, no podrá ser cancelado ni reembolsado, salvo por error comprobable de la aplicación o del restaurante.
+Una vez confirmado el pedido, no podrá ser cancelado ni reembolsado, salvo por error comprobable de la aplicación o del local.
 
 7. RESPONSABILIDADES
-Mordisko no se hace responsable por:
+Sazón no se hace responsable por:
 
 Errores en la información proporcionada por el usuario.
 
 Fallas en los servicios de conexión o plataformas de pago.
 
-Retrasos imputables a causas ajenas al restaurante (clima, tráfico, etc.).
+Retrasos imputables a causas ajenas al local (clima, tráfico, etc.).
 
 8. PROPIEDAD INTELECTUAL
-Todos los contenidos de la aplicación, incluyendo logotipos, imágenes y textos, son propiedad del restaurante y no podrán ser utilizados sin autorización expresa.
+Todos los contenidos de la aplicación, incluyendo logotipos, imágenes y textos, son propiedad del local y no podrán ser utilizados sin autorización expresa.
 
 9. MODIFICACIONES
-Mordisko se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. El uso continuado de la aplicación implica la aceptación de los cambios.
+Sazón se reserva el derecho de modificar estos Términos y Condiciones en cualquier momento. El uso continuado de la aplicación implica la aceptación de los cambios.
 
 10. CONTACTO
-Para dudas, quejas o sugerencias, puede contactarnos a través del correo: soporte@mordisko.com o directamente desde la aplicación.
+Para dudas, quejas o sugerencias, puede contactarnos a través del whatsaap: 0414-845.53.55.
 
-Última actualización15 de Julio de 2.025
+Última actualización 15 de Octubre de 2.025.

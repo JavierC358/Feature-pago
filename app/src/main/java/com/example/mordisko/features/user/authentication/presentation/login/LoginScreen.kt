@@ -93,7 +93,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = "Bienvenido a Mordisko",
+                text = "Bienvenido a Sazón",
                 style = MaterialTheme.typography.headlineSmall,
                 color = orange
             )
