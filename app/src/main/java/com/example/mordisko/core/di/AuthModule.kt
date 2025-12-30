@@ -1,17 +1,14 @@
 package com.example.mordisko.core.di
 
 import android.content.Context
-import com.example.mordisko.features.admin.categories.data.FirestoreCategoriesRepository
-import com.example.mordisko.features.admin.categories.domain.CategoriesRepository
 import com.example.mordisko.features.admin.data.repository.MenuRepositoryImpl
 import com.example.mordisko.features.user.authentication.login.data.repository.LoginRepositoryImpl
 import com.example.mordisko.features.user.authentication.login.domain.LogoutUseCase
 import com.example.mordisko.features.user.authentication.login.domain.repository.LoginRepository
 import com.example.mordisko.features.user.authentication.login.domain.repository.LogoutRepository
 import com.example.mordisko.features.user.cart.data.repository.OrderRepository
-import com.example.mordisko.features.user.profile.data.repository.UserRepositoryImpl  // ✅ CORRECTO
+import com.example.mordisko.features.user.profile.data.repository.UserRepositoryImpl
 import com.example.mordisko.features.user.profile.domain.repository.UserRepository
-import com.google.android.datatransport.runtime.dagger.Binds
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage

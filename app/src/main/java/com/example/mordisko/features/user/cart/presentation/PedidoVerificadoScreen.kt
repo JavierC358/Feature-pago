@@ -57,7 +57,7 @@ fun PedidoVerificadoScreen(
 
             Text(
                 text = "¡Pago Verificado!",
-                fontSize = 40.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
                 color = orange
             )

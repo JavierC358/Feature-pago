@@ -5,7 +5,6 @@ sealed class SplashNavigation {
     object Login : SplashNavigation()
     object Horario : SplashNavigation()
     object Home : SplashNavigation()
-
     object AdminPanel : SplashNavigation()
-
 }
+

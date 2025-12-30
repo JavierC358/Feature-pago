@@ -1,3 +1,8 @@
 <resources>
-    <string name="app_name">Sazón</string>
+    <string name="app_name">Mordisko</string>
+
+    <!-- Google Sign-In -->
+    <string name="default_web_client_id">
+        1094908267876-mcsa710qbkilkhe26t3rf7nbfnajubsj.apps.googleusercontent.com
+    </string>
 </resources>

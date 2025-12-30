@@ -24,6 +24,10 @@ import androidx.navigation.NavController
 import com.example.mordisko.features.user.cart.presentation.CartViewModel
 import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryViewModel
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -121,9 +125,18 @@ fun DeliveryScreen(
                                 modifier = Modifier.fillMaxWidth(),
                                 maxLines = 2,
                                 textStyle = LocalTextStyle.current.copy(color = Color.White),
-                                colors = TextFieldDefaults.outlinedTextFieldColors(
-                                    focusedBorderColor = Color(0xFFE05B13), // ✅ Color personalizado para borde activo
-                                    unfocusedBorderColor = Color(0xFFE05B13), // ✅ Color personalizado para borde inactivo
+                                colors = TextFieldDefaults.colors(
+                                    // fondo (outlined suele ir transparente)
+                                    focusedContainerColor = Color.Transparent,
+                                    unfocusedContainerColor = Color.Transparent,
+                                    disabledContainerColor = Color.Transparent,
+
+                                    // borde del OutlinedTextField
+                                    focusedIndicatorColor = Color(0xFFE05B13),
+                                    unfocusedIndicatorColor = Color(0xFFE05B13),
+                                    disabledIndicatorColor = Color(0xFFE05B13),
+
+                                    // cursor y textos auxiliares/label
                                     cursorColor = Color.White,
                                     focusedLabelColor = Color.White,
                                     unfocusedLabelColor = Color.White,

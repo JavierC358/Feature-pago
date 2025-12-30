@@ -30,26 +30,23 @@ fun SplashScreen(
 
     LaunchedEffect(navigationState) {
         when (navigationState) {
-            is SplashNavigation.Login -> {
+            SplashNavigation.Loading -> Unit   // ⏳ no navegamos aún
+            SplashNavigation.Login -> {
                 Log.d("SplashScreen", "Navegando a Login")
                 onNavigateToLogin()
             }
-            is SplashNavigation.Horario -> {
-                Log.d("NAV_TEST", "Entrando al bloque Horario en SplashScreen")
+            SplashNavigation.Horario -> {
+                Log.d("SplashScreen", "Navegando a Horario")
                 onNavigateToHorario()
             }
-
-            is SplashNavigation.Home -> {
+            SplashNavigation.Home -> {
                 Log.d("SplashScreen", "Navegando a Home")
                 onNavigateToHome()
             }
-
-            is SplashNavigation.AdminPanel -> {
+            SplashNavigation.AdminPanel -> {
                 Log.d("SplashScreen", "Navegando a Panel Admin")
-                onNavigateToAdminPanel() // ✅ Cambia la ruta cuando la uses en AppNavigation
+                onNavigateToAdminPanel()
             }
-
-            else -> {}
         }
     }
 

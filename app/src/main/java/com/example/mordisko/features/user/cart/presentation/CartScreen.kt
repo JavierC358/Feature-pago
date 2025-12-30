@@ -107,7 +107,14 @@ fun CartScreen(
                             onValueChange = { if (it.length <= 160) comment = it },
                             placeholder = { Text("Agrega tu comentario", color = Color.Gray) },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = TextFieldDefaults.textFieldColors(containerColor = Color.Transparent)
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent
+                            )
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))

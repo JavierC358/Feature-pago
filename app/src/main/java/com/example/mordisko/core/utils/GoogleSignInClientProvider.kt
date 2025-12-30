@@ -1,19 +1,18 @@
 package com.example.mordisko.core.utils
 
 import android.content.Context
+import com.example.mordisko.R
 import com.google.android.gms.auth.api.signin.GoogleSignIn
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.example.mordisko.BuildConfig
 
 object GoogleSignInClientProvider {
 
-    fun getClient(context: Context): GoogleSignInClient {
-        val options = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+    fun getClient(context: Context) =
+        GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(context.getString(R.string.default_web_client_id))
             .requestEmail()
             .build()
-
-        return GoogleSignIn.getClient(context, options)
-    }
+            .let { options ->
+                GoogleSignIn.getClient(context, options)
+            }
 }
