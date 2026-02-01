@@ -2,82 +2,109 @@ package com.example.mordisko.features.user.cart.data.repository
 
 import android.util.Log
 import com.example.mordisko.features.user.cart.domain.model.OrderModel
-import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
-import java.util.Date
 import javax.inject.Inject
 
 class OrderRepository @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val firebaseAuth: FirebaseAuth
 ) {
-
+    private val orderRequestsCollection = firestore.collection("order_requests")
     private val ordersCollection = firestore.collection("orders")
     private val counterDoc = firestore.collection("counters").document("orderCounter")
 
-    suspend fun saveOrder(order: OrderModel): Result<String> {
+    suspend fun saveOrder(order: OrderModel, requestId: String): Result<String> {
         return try {
-            val orderNumber = generateOrderNumber()
             val userId = firebaseAuth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuario no autenticado"))
 
-            val now = Date()
-            val firebaseTimestamp = Timestamp(now)
-
-            // Mapear los items a un formato JSON-friendly
             val itemsMap = order.items.map { item ->
+                val extrasMap = item.extras.map { extra ->
+                    mapOf(
+                        "name" to extra.name,
+                        "size" to extra.size,
+                        "priceUsd" to extra.priceUsd,
+                        "priceBs" to extra.priceBs
+                    )
+                }
+
                 mapOf(
                     "name" to item.name,
                     "quantity" to item.quantity,
                     "priceUsd" to item.priceUsd,
                     "size" to item.size,
-                    "imageUrl" to item.imageUrl
+                    "imageUrl" to item.imageUrl,
+                    "extras" to extrasMap
                 )
             }
 
-            val orderWithMeta = hashMapOf(
-                "orderNumber" to orderNumber,
-                "userId" to userId,
-                "items" to itemsMap,
-                "deliveryOption" to order.deliveryOption,
-                "address" to order.address,
-                "reference" to order.reference,
-                "paymentMethod" to order.paymentMethod,
-                "exchangeRate" to order.exchangeRate,
-                "subtotalUsd" to order.subtotalUsd,
-                "deliveryCostUsd" to order.deliveryCostUsd,
-                "totalUsd" to order.totalUsd,
-                "totalBs" to order.totalBs,
-                "timestamp" to firebaseTimestamp,
-                "comment" to order.comment,
-                "deseaFactura" to order.deseaFactura,
-                "razonSocial" to order.razonSocial,
-                "rif" to order.rif,
-                "direccion" to order.direccion,
-                "paymentStatus" to "pendiente" // aseguramos el campo aquí
-            )
+            val requestRef = orderRequestsCollection.document(requestId)
 
-            ordersCollection.document(orderNumber).set(orderWithMeta).await()
+            val orderNumber = firestore.runTransaction { transaction ->
+
+                // ✅ 1) Idempotencia: si ya existe requestId, devolvemos mismo orderNumber
+                val existingReqSnap = transaction.get(requestRef)
+                val existingOrderNumber = existingReqSnap.getString("orderNumber")
+                if (!existingOrderNumber.isNullOrBlank()) {
+                    return@runTransaction existingOrderNumber
+                }
+
+                // ✅ 2) Correlativo en la misma transacción (solo una vez)
+                val counterSnap = transaction.get(counterDoc)
+                val current = counterSnap.getLong("value") ?: 0L
+                val next = current + 1
+                transaction.update(counterDoc, "value", next)
+                val newOrderNumber = next.toString().padStart(6, '0')
+
+                // ✅ 3) Crear orden
+                val orderRef = ordersCollection.document(newOrderNumber)
+
+                val orderWithMeta = hashMapOf(
+                    "orderNumber" to newOrderNumber,
+                    "requestId" to requestId,
+                    "userId" to userId,
+                    "items" to itemsMap,
+                    "deliveryOption" to order.deliveryOption,
+                    "address" to order.address,
+                    "reference" to order.reference,
+                    "paymentMethod" to order.paymentMethod,
+                    "exchangeRate" to order.exchangeRate,
+                    "subtotalUsd" to order.subtotalUsd,
+                    "deliveryCostUsd" to order.deliveryCostUsd,
+                    "totalUsd" to order.totalUsd,
+                    "totalBs" to order.totalBs,
+                    "timestamp" to FieldValue.serverTimestamp(),
+                    "comment" to order.comment,
+                    "deseaFactura" to order.deseaFactura,
+                    "razonSocial" to order.razonSocial,
+                    "rif" to order.rif,
+                    "direccion" to order.direccion,
+                    "paymentStatus" to "pendiente",
+                    "customerLat" to order.customerLat,
+                    "customerLng" to order.customerLng
+                )
+
+                transaction.set(orderRef, orderWithMeta)
+
+                // ✅ 4) Sellar requestId -> orderNumber
+                val requestData = mapOf(
+                    "orderNumber" to newOrderNumber,
+                    "userId" to userId,
+                    "createdAt" to FieldValue.serverTimestamp()
+                )
+                transaction.set(requestRef, requestData, SetOptions.merge())
+
+                newOrderNumber
+            }.await()
+
             Result.success(orderNumber)
 
         } catch (e: Exception) {
             Result.failure(e)
-        }
-    }
-
-    private suspend fun generateOrderNumber(): String {
-        firestore.runTransaction { transaction ->
-            val snapshot = transaction.get(counterDoc)
-            val current = snapshot.getLong("value") ?: 0L
-            val next = current + 1
-            transaction.update(counterDoc, "value", next)
-            next
-        }.await().let { nextNumber ->
-            return nextNumber.toString().padStart(6, '0')
         }
     }
 

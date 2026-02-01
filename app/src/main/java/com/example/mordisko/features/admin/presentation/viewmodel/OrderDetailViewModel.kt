@@ -23,22 +23,24 @@ class OrderDetailViewModel @Inject constructor(
     fun loadOrder(orderNumber: String) {
         viewModelScope.launch {
             try {
-                Log.d("OrderDetailVM", "Buscando orden con ID: $orderNumber")
+                Log.d("OrderDetailVM", "Buscando orden con ID(doc): $orderNumber")
 
-                val snapshot = firestore.collection("orders")
-                    .whereEqualTo("orderNumber", orderNumber)
+                val doc = firestore.collection("orders")
+                    .document(orderNumber)
                     .get()
                     .await()
 
-                if (!snapshot.isEmpty) {
-                    val order = snapshot.documents.first().toObject(OrderModel::class.java)
+                if (doc.exists()) {
+                    val order = doc.toObject(OrderModel::class.java)
                     _order.value = order
                     Log.d("OrderDetailVM", "Orden encontrada: $order")
                 } else {
-                    Log.e("OrderDetailVM", "No se encontró la orden con ID: $orderNumber")
+                    Log.e("OrderDetailVM", "No existe la orden con ID(doc): $orderNumber")
+                    _order.value = null
                 }
             } catch (e: Exception) {
                 Log.e("OrderDetailVM", "Error al cargar la orden", e)
+                _order.value = null
             }
         }
     }

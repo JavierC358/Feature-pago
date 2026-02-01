@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import java.util.UUID
 
 @HiltViewModel
 class CartViewModel @Inject constructor(
@@ -57,6 +58,13 @@ class CartViewModel @Inject constructor(
     private val _deliveryCost = MutableStateFlow(0.0)
     val deliveryCost: StateFlow<Double> = _deliveryCost
 
+    private val _isPlacingOrder = MutableStateFlow(false)
+    val isPlacingOrder: StateFlow<Boolean> = _isPlacingOrder
+
+    // requestId “del checkout actual” (se conserva para reintentos)
+    private val _currentRequestId = MutableStateFlow<String?>(null)
+    val currentRequestId: StateFlow<String?> = _currentRequestId
+
     init {
         loadExchangeRate() // ✅ Carga automática al iniciar
     }
@@ -84,9 +92,18 @@ class CartViewModel @Inject constructor(
 
     fun setDeliveryOption(option: DeliveryOption) {
         _deliveryOption.value = option
+
         // ✅ Al elegir Moto, aseguramos costo mínimo
         if (option == DeliveryOption.Moto && _deliveryCost.value == 0.0) {
             _deliveryCost.value = 2.0
+        }
+
+        // ✅ Regla de negocio: para Moto solo Pago Móvil
+        if (option == DeliveryOption.Moto) {
+            val currentPayment = _paymentMethod.value
+            if (currentPayment == PaymentMethod.Efectivo || currentPayment == PaymentMethod.PuntoDeVenta) {
+                _paymentMethod.value = PaymentMethod.PagoMovil
+            }
         }
     }
 
@@ -130,8 +147,16 @@ class CartViewModel @Inject constructor(
         exchangeRate: Double,
         deliveryCostUsd: Double,
         clearCartOnSuccess: Boolean = true,
+        requestId: String? = null, // ✅ NUEVO
         onResult: (success: Boolean, error: String?, orderNumber: String?) -> Unit
     ) {
+        // ✅ Anti doble envío (ViewModel-level)
+        if (_isPlacingOrder.value) {
+            Log.w("CartViewModel", "placeOrder ignorado: ya hay un envío en curso")
+            onResult(false, "Ya estamos enviando tu pedido…", null)
+            return
+        }
+
         val items = _cartItems.value
         val delivery = _deliveryOption.value
         val address = _secondaryAddress.value
@@ -157,17 +182,38 @@ class CartViewModel @Inject constructor(
             subtotalUsd = subtotalUsd,
             deliveryCostUsd = deliveryCostUsd,
             totalUsd = totalUsd,
-            totalBs = totalBs
+            totalBs = totalBs,
+            customerLat = _selectedLat.value,
+            customerLng = _selectedLng.value,
+            comment = _orderComment.value
         )
+        // ✅ requestId estable para este checkout (sirve para reintentos)
+        val finalRequestId = requestId
+            ?: _currentRequestId.value
+            ?: UUID.randomUUID().toString().also { _currentRequestId.value = it }
+
+        _isPlacingOrder.value = true
 
         viewModelScope.launch {
-            val result = orderRepository.saveOrder(order)
-            if (result.isSuccess) {
-                if (clearCartOnSuccess) clearCart()
-                val orderNumber = result.getOrNull()
-                onResult(true, null, orderNumber)
-            } else {
-                onResult(false, result.exceptionOrNull()?.message, null)
+            try {
+                val result = orderRepository.saveOrder(
+                    order = order,
+                    requestId = finalRequestId // ✅ NUEVO
+                )
+
+                if (result.isSuccess) {
+                    if (clearCartOnSuccess) clearCart()
+
+                    // ✅ si se creó OK: limpiamos el requestId para próximos pedidos
+                    _currentRequestId.value = null
+                    onResult(true, null, result.getOrNull())
+                } else {
+                    onResult(false, result.exceptionOrNull()?.message, null)
+                }
+            } catch (e: Exception) {
+                onResult(false, e.message, null)
+            } finally {
+                _isPlacingOrder.value = false
             }
         }
     }

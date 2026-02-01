@@ -168,7 +168,7 @@ fun AppNavigation(
             composable(Routes.Register) {
                 RegisterScreen(
                     onRegisterSuccess = {
-                        navController.navigate(Routes.Home) {
+                        navController.navigate(Routes.Horario) {
                             popUpTo(Routes.Register) { inclusive = true }
                         }
                     },

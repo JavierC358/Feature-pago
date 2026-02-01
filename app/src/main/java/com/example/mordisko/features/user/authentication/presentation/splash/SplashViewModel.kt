@@ -35,7 +35,7 @@ class SplashViewModel @Inject constructor(
                 return@AuthStateListener
             }
 
-            // Si hay usuario, validamos rol en Firestore
+            // Si hay usuario, validamos rol y términos en Firestore
             viewModelScope.launch {
                 handleLoggedUser(user)
             }
@@ -48,27 +48,31 @@ class SplashViewModel @Inject constructor(
         if (alreadyNavigated) return
 
         try {
-            // Asegura estado real del usuario (por si está "stale")
             user.reload().await()
 
             val uid = user.uid
             val db = FirebaseFirestore.getInstance()
 
             val document = db.collection("users").document(uid).get().await()
-            val rol = document.getString("rol") ?: "cliente"
 
-            Log.d("NAV_TEST", "🎯 Rol detectado: $rol")
+            val rol = document.getString("rol") ?: "cliente"
+            val termsAccepted = document.getBoolean("termsAccepted") == true
+
+            Log.d("NAV_TEST", "🎯 Rol detectado: $rol | termsAccepted=$termsAccepted")
 
             alreadyNavigated = true
             if (rol == "admin") {
                 _navigationState.value = SplashNavigation.AdminPanel
             } else {
-                Log.d("NAV_TEST", "Asignando navegación a Horario desde SplashViewModel")
-                _navigationState.value = SplashNavigation.Horario
+                _navigationState.value = if (termsAccepted) {
+                    SplashNavigation.Home
+                } else {
+                    SplashNavigation.Horario
+                }
             }
 
         } catch (e: Exception) {
-            Log.e("SplashViewModel", "Error validando sesión/rol: ${e.message}", e)
+            Log.e("SplashViewModel", "Error validando sesión/rol/terminos: ${e.message}", e)
             firebaseAuth.signOut()
 
             alreadyNavigated = true

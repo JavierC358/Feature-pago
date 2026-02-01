@@ -68,6 +68,10 @@ fun PizzaDetailScreen(
         Log.d("PizzaDetailScreen", "cartViewModel hash: ${cartViewModel.hashCode()}")
     }
 
+    LaunchedEffect(pizza.category) {
+        viewModel.setDefaultSelectionForCategory(pizza.category)
+    }
+
     // Opciones de peso (clave usada en Firestore -> etiqueta visible)
     val WEIGHT_OPTIONS = listOf(
         "250" to "0.250 Kg",
@@ -103,8 +107,8 @@ fun PizzaDetailScreen(
     val isMeatCategory =
         pizza.category == PizzaItemCategory.CARNE_EN_VARA || pizza.category == PizzaItemCategory.AHUMADOS
     val isBroasterCategory = pizza.category == PizzaItemCategory.A_LA_BROASTER
-    var selectedWeightKey by remember { mutableStateOf("500") } // default 0.500 Kg
-    var selectedPortionKey by remember { mutableStateOf("HALF") }
+    val selectedWeightKey by viewModel.selectedWeightKey.collectAsState()
+    val selectedPortionKey by viewModel.selectedPortionKey.collectAsState()
 
     var quantity by remember { mutableStateOf(1) }
 
@@ -174,7 +178,7 @@ fun PizzaDetailScreen(
                         WeightOptionCard(
                             label = label,
                             selected = key == selectedWeightKey,
-                            onClick = { if (usd != null) selectedWeightKey = key },
+                            onClick = { if (usd != null) viewModel.selectWeight(key) },
                             usd = usd,
                             bs = usd?.let { it * exchangeRate },
                             accent = textColor,
@@ -206,7 +210,7 @@ fun PizzaDetailScreen(
                         WeightOptionCard( // reutilizamos el mismo componente; si quieres, renómbralo a OptionCard
                             label = label,
                             selected = key == selectedPortionKey,
-                            onClick = { if (usd != null) selectedPortionKey = key },
+                            onClick = { if (usd != null) viewModel.selectPortion(key) },
                             usd = usd,
                             bs = usd?.let { it * exchangeRate },
                             accent = textColor
@@ -270,7 +274,7 @@ fun PizzaDetailScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
-            } else if (!isMeatCategory) {
+            } else if (!isMeatCategory && !isBroasterCategory) {
                 // Items sin tamaños (ni peso)
                 pizza.priceUsd?.let {
                     Text("$${"%.2f".format(it)}", color = textColor, style = MaterialTheme.typography.titleLarge)
@@ -319,6 +323,31 @@ fun PizzaDetailScreen(
                         }
                     }
                 }
+            }
+
+            // ===== PRECIO GRANDE DINÁMICO PARA CARNE / AHUMADOS / BROASTER =====
+            val baseUsd = when {
+                isMeatCategory -> pizza.priceByWeight?.get(selectedWeightKey)
+                isBroasterCategory -> pizza.priceByPortion[selectedPortionKey]
+                else -> null
+            }
+
+            baseUsd?.let { usd ->
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "$${"%.2f".format(usd)}",
+                    color = textColor,
+                    style = MaterialTheme.typography.headlineMedium
+                )
+
+                Text(
+                    text = "Bs ${"%,.2f".format(usd * exchangeRate)}",
+                    color = Color.Gray,
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
             }
 
             Row(

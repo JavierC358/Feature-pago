@@ -13,15 +13,15 @@ class LoginRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore
 ) : LoginRepository, LogoutRepository {
 
-    override suspend fun loginWithEmailAndPassword(email: String, password: String): Boolean {
+    override suspend fun loginWithEmailAndPassword(email: String, password: String): Result<Unit> {
         return try {
             val cleanEmail = email.trim()
             val cleanPass  = password.trim()
             firebaseAuth.signInWithEmailAndPassword(cleanEmail, cleanPass).await()
-            true
+            Result.success(Unit)
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al iniciar sesión", e)
-            false
+            Result.failure(e)
         }
     }
 
@@ -29,29 +29,23 @@ class LoginRepositoryImpl @Inject constructor(
         return try {
             val uid = firebaseAuth.currentUser?.uid ?: return null
             val doc = firestore.collection("users").document(uid).get().await()
-
-            // Lee "rol" (actual) o "role" (por si migras el nombre)
-            doc.getString("rol")
-                ?: doc.getString("role")
-                ?: "cliente"
+            doc.getString("rol") ?: doc.getString("role") ?: "cliente"
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al obtener rol de usuario", e)
             null
         }
     }
 
-    override fun logout() {
-        firebaseAuth.signOut()
-    }
-
-    override suspend fun registerWithEmailAndPassword(email: String, password: String): Boolean {
+    override suspend fun registerWithEmailAndPassword(email: String, password: String): Result<Unit> {
         return try {
             val cleanEmail = email.trim()
             val cleanPass  = password.trim()
-            firebaseAuth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
-            val uid = firebaseAuth.currentUser?.uid ?: return true // ya está creado en Auth
 
-            // ✅ Perfil inicial mínimo en "profile/{uid}" (dejas users solo para roles/admin)
+            firebaseAuth.createUserWithEmailAndPassword(cleanEmail, cleanPass).await()
+
+            val uid = firebaseAuth.currentUser?.uid
+                ?: return Result.failure(Exception("No se pudo obtener el uid del usuario"))
+
             val initialProfile = mapOf(
                 "correo" to cleanEmail,
                 "nombre" to "",
@@ -60,12 +54,17 @@ class LoginRepositoryImpl @Inject constructor(
                 "cedula" to "",
                 "photoUrl" to ""
             )
+
             firestore.collection("profile").document(uid).set(initialProfile).await()
 
-            true
+            Result.success(Unit)
         } catch (e: Exception) {
             Log.e("LoginRepository", "Error al registrar usuario", e)
-            false
+            Result.failure(e)
         }
+    }
+
+    override fun logout() {
+        firebaseAuth.signOut()
     }
 }

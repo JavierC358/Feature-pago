@@ -35,6 +35,29 @@ class MenuViewModel @Inject constructor(
     private val _extras = MutableStateFlow<List<PizzaItem>>(emptyList())
     val extras: StateFlow<List<PizzaItem>> = _extras
 
+    // 🔥 Selección de peso (Carne en vara / Ahumados)
+    private val _selectedWeightKey = MutableStateFlow("500")
+    val selectedWeightKey: StateFlow<String> = _selectedWeightKey
+
+    // 🔥 Selección de porción (Broaster)
+    private val _selectedPortionKey = MutableStateFlow("HALF")
+    val selectedPortionKey: StateFlow<String> = _selectedPortionKey
+
+    private val _selectedSize = MutableStateFlow<String?>(null)
+    val selectedSize: StateFlow<String?> = _selectedSize
+
+    fun selectSize(size: String) {
+        _selectedSize.value = size
+    }
+
+    fun selectWeight(key: String) {
+        _selectedWeightKey.value = key
+    }
+
+    fun selectPortion(key: String) {
+        _selectedPortionKey.value = key
+    }
+
     // ✅ Cargar productos al iniciar
     init {
         fetchProductsFromFirestore()
@@ -88,8 +111,25 @@ class MenuViewModel @Inject constructor(
     private val _selectedPizza = MutableStateFlow<PizzaItem?>(null)
     val selectedPizza: StateFlow<PizzaItem?> = _selectedPizza
 
-    fun selectPizza(pizza: PizzaItem) { _selectedPizza.value = pizza }
+    fun selectPizza(pizza: PizzaItem) {
+        _selectedPizza.value = pizza
+
+        // 🔥 Aplicar tamaño default según categoría
+        val defaultSize = getDefaultSizeForCategory(pizza.category)
+        if (defaultSize != null) {
+            _selectedSize.value = defaultSize   // 👈 ESTA LÍNEA ES LA CLAVE
+        }
+    }
     fun clearSelectedPizza() { _selectedPizza.value = null }
+
+    private fun getDefaultSizeForCategory(category: PizzaItemCategory?): String? {
+        return when (category) {
+            PizzaItemCategory.CARNE_EN_VARA -> "0.500 kg"
+            PizzaItemCategory.AHUMADOS -> "0.500 kg"
+            PizzaItemCategory.A_LA_BROASTER -> "1/2"
+            else -> null
+        }
+    }
 
     private val _selectedExtras = MutableStateFlow<Map<String, List<SelectedExtra>>>(emptyMap())
     val selectedExtras: StateFlow<Map<String, List<SelectedExtra>>> = _selectedExtras
@@ -140,6 +180,17 @@ class MenuViewModel @Inject constructor(
         val pizzaName = _selectedPizza.value?.name ?: return
         _selectedExtras.value = _selectedExtras.value.toMutableMap().apply {
             put(pizzaName, emptyList())
+        }
+    }
+
+    fun setDefaultSelectionForCategory(category: PizzaItemCategory) {
+        when (category) {
+            PizzaItemCategory.CARNE_EN_VARA,
+            PizzaItemCategory.AHUMADOS -> _selectedWeightKey.value = "500"
+
+            PizzaItemCategory.A_LA_BROASTER -> _selectedPortionKey.value = "HALF"
+
+            else -> {}
         }
     }
 }

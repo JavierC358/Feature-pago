@@ -19,6 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mordisko.features.user.cart.domain.model.CartItem
@@ -66,8 +67,15 @@ fun OrderDetailScreen(
     }
 
     val order = orderState!!
-    val googleMapsUrl = remember(order.address) {
-        "https://www.google.com/maps/search/?api=1&query=${Uri.encode(order.address)}"
+    val googleMapsUrl = remember(order.customerLat, order.customerLng, order.address) {
+        val lat = order.customerLat
+        val lng = order.customerLng
+
+        if (lat != null && lng != null) {
+            "https://www.google.com/maps?q=$lat,$lng&z=19"
+        } else {
+            "https://www.google.com/maps/search/?api=1&query=${Uri.encode(order.address)}"
+        }
     }
 
     Scaffold(
@@ -116,6 +124,26 @@ fun OrderDetailScreen(
                         Text("📍 Dirección de entrega:", fontWeight = FontWeight.Bold)
                         Text(order.address)
 
+                        if (order.reference.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text("📌 Referencia: ${order.reference}")
+                        }
+
+                        // 🆕 DEBUG DE COORDENADAS (AQUÍ)
+                        if (order.customerLat != null && order.customerLng != null) {
+                            Text(
+                                text = "📌 Coordenadas: ${order.customerLat}, ${order.customerLng}",
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        } else {
+                            Text(
+                                text = "⚠️ Coordenadas no disponibles (usando dirección aproximada)",
+                                fontSize = 12.sp,
+                                color = Color.Red
+                            )
+                        }
+
                         Spacer(modifier = Modifier.height(8.dp))
 
                         Row {
@@ -137,7 +165,17 @@ fun OrderDetailScreen(
                                 Spacer(Modifier.width(8.dp))
                                 OutlinedButton(
                                     onClick = {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(googleMapsUrl))
+                                        val lat = order.customerLat
+                                        val lng = order.customerLng
+
+                                        val uri = if (lat != null && lng != null) {
+                                            // ✅ Abre Google Maps centrado EXACTO en coords
+                                            Uri.parse("geo:$lat,$lng?q=$lat,$lng")
+                                        } else {
+                                            Uri.parse(googleMapsUrl)
+                                        }
+
+                                        val intent = Intent(Intent.ACTION_VIEW, uri)
                                         context.startActivity(intent)
                                     }
                                 ) {
@@ -208,11 +246,11 @@ fun OrderDetailScreen(
                     shape = RoundedCornerShape(16.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("💰 Subtotal: $${order.subtotalUsd}")
-                        Text("🚚 Delivery: $${order.deliveryCostUsd}")
-                        Text("💵 Total (USD): $${order.totalUsd}", fontWeight = FontWeight.Bold)
-                        Text("💱 Tasa de cambio: Bs ${order.exchangeRate}")
-                        Text("💴 Total (Bs): Bs ${order.totalBs}", fontWeight = FontWeight.Bold)
+                        Text("💰 Subtotal: $${String.format("%.2f", order.subtotalUsd)}")
+                        Text("🚚 Delivery: $${String.format("%.2f", order.deliveryCostUsd)}")
+                        Text("💵 Total (USD): $${String.format("%.2f", order.totalUsd)}", fontWeight = FontWeight.Bold)
+                        Text("💱 Tasa de cambio: Bs ${String.format("%.2f", order.exchangeRate)}")
+                        Text("💴 Total (Bs): Bs ${String.format("%.2f", order.totalBs)}", fontWeight = FontWeight.Bold)
                     }
                 }
             }

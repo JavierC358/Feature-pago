@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Mordisko</string>
+    <string name="app_name">Sazon</string>
 
     <!-- Google Sign-In -->
     <string name="default_web_client_id">

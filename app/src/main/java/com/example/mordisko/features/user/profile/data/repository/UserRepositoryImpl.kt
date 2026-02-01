@@ -16,31 +16,40 @@ class UserRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth
 ) : UserRepository {
 
-    override suspend fun saveUserProfile(profile: UserProfile, imageUri: Uri?): Result<Unit> {
+    override suspend fun saveUserProfile(profile: UserProfile, imageUri: Uri?): Result<UserProfile> {
         return try {
             val uid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuario no autenticado"))
 
-            // Subir imagen si se seleccionó, sino conservar la anterior
+            // ✅ Foto existente (respaldo) para NO borrarla
+            val currentDoc = firestore.collection("profile").document(uid).get().await()
+            val existingPhotoUrl = currentDoc.getString("photoUrl").orEmpty()
+
+            // ✅ Subir nueva si hay, si no conservar la que exista
             val finalPhotoUrl = try {
                 imageUri?.let {
                     val imageRef = storage.reference.child("profile_pictures/$uid/profile.jpg")
                     imageRef.putFile(it).await()
                     imageRef.downloadUrl.await().toString()
-                } ?: profile.photoUrl
+                } ?: when {
+                    profile.photoUrl.isNotBlank() -> profile.photoUrl
+                    else -> existingPhotoUrl
+                }
             } catch (_: Exception) {
-                profile.photoUrl // si la subida falla, no afecta el resto de datos
+                when {
+                    profile.photoUrl.isNotBlank() -> profile.photoUrl
+                    else -> existingPhotoUrl
+                }
             }
 
             val profileToSave = profile.copy(photoUrl = finalPhotoUrl)
 
-            // Guardar con merge para no borrar otros campos existentes
             firestore.collection("profile")
                 .document(uid)
                 .set(profileToSave, SetOptions.merge())
                 .await()
 
-            Result.success(Unit)
+            Result.success(profileToSave)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -251,9 +251,11 @@ class AdminViewModel @Inject constructor(
     ): Pair<List<VerificacionPago>, DocumentSnapshot?> {
 
         var q: Query = firestore.collection("orders")
+
         if (state.value.filter == OrdersFilter.POR_VERIFICAR) {
-            q = q.whereEqualTo("paymentStatus", "por_verificar") // 👈 como antes
+            q = q.whereEqualTo("paymentStatus", "por_verificar")
         }
+
         q = q.orderBy("timestamp", Query.Direction.DESCENDING).limit(pageSize)
 
         if (lastDoc != null) q = q.startAfter(lastDoc)
@@ -262,8 +264,13 @@ class AdminViewModel @Inject constructor(
         val docs = snap.documents
 
         val result = mutableListOf<VerificacionPago>()
+
         for (order in docs) {
             val orderId = order.id
+
+            // ✅ Total SIEMPRE desde orders
+            val totalBs = order.getDouble("totalBs")
+
             val pagoDoc = firestore.collection("orders")
                 .document(orderId)
                 .collection("payment_verification")
@@ -271,33 +278,26 @@ class AdminViewModel @Inject constructor(
                 .get()
                 .await()
 
-            if (pagoDoc.exists()) {
-                val data = pagoDoc.data
-                if (data != null) {
-                    result.add(
-                        VerificacionPago(
-                            orderNumber     = orderId,
-                            amountPaid      = data["amountPaid"]?.toString()
-                                ?: (order.getDouble("totalBs")?.toString() ?: ""),
-                            referenceLast4  = data["referenceLast4"]?.toString() ?: "--",
-                            phoneNumber     = data["phoneNumber"]?.toString() ?: "--",
-                            status          = normalizeStatus(
-                                data["status"]?.toString() ?: order.getString("paymentStatus")
-                            )
-                        )
-                    )
-                }
-            } else {
-                result.add(
-                    VerificacionPago(
-                        orderNumber     = orderId,
-                        amountPaid      = order.getDouble("totalBs")?.toString() ?: "",
-                        referenceLast4  = "--",
-                        phoneNumber     = "--",
-                        status          = normalizeStatus(order.getString("paymentStatus"))
-                    )
+            // ✅ Caso A: existe info de pago móvil
+            val amountPaid = if (pagoDoc.exists()) pagoDoc.getDouble("amountPaid") else null
+            val referenceLast4 = if (pagoDoc.exists()) pagoDoc.getString("referenceLast4") ?: "--" else "--"
+            val phoneNumber = if (pagoDoc.exists()) pagoDoc.getString("phoneNumber") ?: "--" else "--"
+
+            val status = normalizeStatus(
+                (if (pagoDoc.exists()) pagoDoc.getString("status") else null)
+                    ?: order.getString("paymentStatus")
+            )
+
+            result.add(
+                VerificacionPago(
+                    orderNumber = orderId,
+                    totalBs = totalBs,
+                    amountPaid = amountPaid,
+                    referenceLast4 = referenceLast4,
+                    phoneNumber = phoneNumber,
+                    status = status
                 )
-            }
+            )
         }
 
         val newLast = docs.lastOrNull()
@@ -330,7 +330,8 @@ data class AdminVerificacionesState(
 
 data class VerificacionPago(
     val orderNumber: String,
-    val amountPaid: String,
+    val totalBs: Double?,     // ✅ total de la orden
+    val amountPaid: Double?,  // ✅ lo que pagó por pago móvil (si existe)
     val referenceLast4: String,
     val phoneNumber: String,
     val status: String

@@ -1,6 +1,7 @@
 package com.example.mordisko.core.di
 
 import com.example.mordisko.features.user.authentication.login.data.repository.LoginRepositoryImpl
+import com.example.mordisko.features.user.authentication.login.domain.repository.LoginRepository
 import com.example.mordisko.features.user.authentication.login.domain.repository.LogoutRepository
 import dagger.Binds
 import dagger.Module
@@ -11,6 +12,12 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+
+    @Binds
+    @Singleton
+    abstract fun bindLoginRepository(
+        impl: LoginRepositoryImpl
+    ): LoginRepository   // 🔥 ESTA LÍNEA FALTABA
 
     @Binds
     @Singleton

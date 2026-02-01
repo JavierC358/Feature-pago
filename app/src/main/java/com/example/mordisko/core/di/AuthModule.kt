@@ -37,13 +37,6 @@ object FirebaseModule {
 
     @Provides
     @Singleton
-    fun provideLoginRepository(
-        firebaseAuth: FirebaseAuth,
-        firestore: FirebaseFirestore
-    ): LoginRepository = LoginRepositoryImpl(firebaseAuth, firestore)
-
-    @Provides
-    @Singleton
     fun provideLogoutUseCase(
         logoutRepository: LogoutRepository
     ): LogoutUseCase = LogoutUseCase(logoutRepository)

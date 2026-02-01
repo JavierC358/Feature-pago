@@ -17,16 +17,50 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.mordisko.features.admin.presentation.viewmodel.PaymentVerificationViewModel
 import kotlinx.coroutines.launch
 
+// ✅ NUEVOS IMPORTS (teclado)
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+
+private fun filterDigitsOnly(input: String, maxLen: Int): String {
+    return input.filter { it.isDigit() }.take(maxLen)
+}
+
+private fun filterMoneyDecimal(input: String, maxDecimals: Int = 2): String {
+    if (input.isBlank()) return ""
+
+    val cleaned = input.filter { it.isDigit() || it == '.' || it == ',' }
+    val normalized = cleaned.replace(',', '.')
+
+    val parts = normalized.split('.')
+    val integerPart = parts.getOrNull(0)?.filter { it.isDigit() } ?: ""
+
+    val decimalPartRaw = parts.drop(1).joinToString("") // si metieron varios puntos
+    val decimalPart = decimalPartRaw.filter { it.isDigit() }.take(maxDecimals)
+
+    return if (normalized.contains('.')) {
+        // Permite "123." mientras escribe
+        if (decimalPartRaw.isEmpty()) "$integerPart."
+        else "$integerPart.$decimalPart"
+    } else {
+        integerPart
+    }
+}
+
 @Composable
 fun VerificarPagoScreen(
     orderNumber: String,
     onCerrar: () -> Unit,
-    onVerificacionEnviada: (String) -> Unit,   // ← NUEVO
+    onVerificacionEnviada: (String) -> Unit,
     viewModel: PaymentVerificationViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    val keyboardController = LocalSoftwareKeyboardController.current
 
     val orange = Color(0xFFE05B13)
 
@@ -39,7 +73,10 @@ fun VerificarPagoScreen(
     var rif by remember { mutableStateOf("") }
     var direccion by remember { mutableStateOf("") }
 
-    val puedeVerificar = monto.isNotBlank() && referencia.length == 4 && telefono.length >= 11 &&
+    val montoValido = monto.isNotBlank() && monto != "." && !monto.endsWith(".")
+    val puedeVerificar = montoValido &&
+            referencia.length == 4 &&
+            telefono.length == 11 &&
             (!deseaFactura || (razonSocial.isNotBlank() && rif.isNotBlank() && direccion.isNotBlank()))
 
     // Mostrar Snackbar de éxito
@@ -47,7 +84,7 @@ fun VerificarPagoScreen(
         if (state.isSuccess) {
             snackbarHostState.showSnackbar("¡Verificación enviada con éxito!")
             viewModel.resetState()
-            onVerificacionEnviada(orderNumber)  // ← en vez de onCerrar()
+            onVerificacionEnviada(orderNumber)
         }
     }
 
@@ -62,9 +99,7 @@ fun VerificarPagoScreen(
     }
 
     Scaffold(
-        snackbarHost = {
-            SnackbarHost(hostState = snackbarHostState)
-        }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -74,9 +109,8 @@ fun VerificarPagoScreen(
                 .padding(24.dp),
             contentAlignment = Alignment.TopCenter
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
+
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -91,36 +125,52 @@ fun VerificarPagoScreen(
                         color = orange
                     )
 
+                    // ✅ MONTO: solo números + decimal
                     OutlinedTextField(
                         value = monto,
-                        onValueChange = { monto = it },
+                        onValueChange = { monto = filterMoneyDecimal(it, maxDecimals = 2) },
                         label = { Text("Monto pagado (Bs.)") },
                         placeholder = { Text("Ej: 109.50") },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Decimal,
+                            imeAction = ImeAction.Next
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // ✅ REFERENCIA: solo números, máx 4
                     OutlinedTextField(
                         value = referencia,
-                        onValueChange = { referencia = it },
+                        onValueChange = { referencia = filterDigitsOnly(it, maxLen = 4) },
                         label = { Text("Últimos 4 dígitos de la referencia") },
                         placeholder = { Text("Ej: 4582") },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number,
+                            imeAction = ImeAction.Next
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
 
+                    // ✅ TELÉFONO: solo números, máx 11 + cerrar teclado en Done
                     OutlinedTextField(
                         value = telefono,
-                        onValueChange = { telefono = it },
+                        onValueChange = { telefono = filterDigitsOnly(it, maxLen = 11) },
                         label = { Text("Teléfono desde donde pagaste") },
                         placeholder = { Text("Ej: 04141234567") },
                         singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Phone,
+                            imeAction = ImeAction.Done
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onDone = { keyboardController?.hide() }
+                        ),
                         modifier = Modifier.fillMaxWidth()
                     )
 
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(
                             checked = deseaFactura,
                             onCheckedChange = { deseaFactura = it },
@@ -161,7 +211,6 @@ fun VerificarPagoScreen(
                     }
                 }
 
-                // ✅ Botones siempre visibles
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,7 +227,10 @@ fun VerificarPagoScreen(
 
                     Button(
                         onClick = {
-                            android.util.Log.d("VerifyUI", "click Verificar order=$orderNumber monto=$monto ref=$referencia tel=$telefono")
+                            android.util.Log.d(
+                                "VerifyUI",
+                                "click Verificar order=$orderNumber monto=$monto ref=$referencia tel=$telefono"
+                            )
                             viewModel.submitPaymentVerification(
                                 orderNumber,
                                 monto,

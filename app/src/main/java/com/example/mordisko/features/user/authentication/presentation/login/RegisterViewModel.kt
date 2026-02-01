@@ -43,7 +43,8 @@ class RegisterViewModel @Inject constructor(
     fun onRegisterSelected(onSuccess: () -> Unit, onError: () -> Unit) {
         viewModelScope.launch {
             val result = registerUseCase(email.value.trim(), password.value)
-            if (result) {
+
+            if (result.isSuccess) {
                 onSuccess()
             } else {
                 onError()

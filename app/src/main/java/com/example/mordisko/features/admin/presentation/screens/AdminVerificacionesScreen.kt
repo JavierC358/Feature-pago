@@ -82,7 +82,11 @@ fun AdminVerificacionesScreen(
                         ) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 Text("Orden: ${order.orderNumber}")
-                                Text("Monto: Bs ${order.amountPaid}")
+                                val totalTexto = order.totalBs?.let { String.format("%.2f", it) } ?: "--"
+                                val pagoTexto = order.amountPaid?.let { String.format("%.2f", it) } ?: "--"
+
+                                Text("Monto (Total): Bs $totalTexto")
+                                Text("Pagó (Pago móvil): Bs $pagoTexto")
                                 Text("Ref: ${order.referenceLast4}")
                                 Text("Tel: ${order.phoneNumber}")
                                 Text("Estado: ${order.status}")

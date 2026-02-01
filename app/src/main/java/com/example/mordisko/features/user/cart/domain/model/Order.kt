@@ -21,7 +21,10 @@ data class OrderModel(
     val deseaFactura: Boolean? = null,
     val razonSocial: String? = null,
     val rif: String? = null,
-    val direccion: String? = null
+    val direccion: String? = null,
+
+    val customerLat: Double? = null,
+    val customerLng: Double? = null
     
 )
 

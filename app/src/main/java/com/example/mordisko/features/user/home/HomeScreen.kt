@@ -9,6 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -19,6 +20,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.IntOffset
@@ -26,6 +28,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.example.mordisko.features.user.menu.domain.model.PizzaCategory
 import com.example.mordisko.features.user.menu.domain.model.PizzaItemCategory
 import com.example.mordisko.features.user.menu.domain.model.pizzaCategories
@@ -196,13 +200,38 @@ fun CircularCategoryCard(
                 ) {
                     when {
                         !imageUrl.isNullOrBlank() -> {
-                            AsyncImage(
-                                model = imageUrl,
+                            // ✅ Cambio puntual: loader mientras carga la imagen (todas a la vez al entrar)
+                            SubcomposeAsyncImage(
+                                model = ImageRequest.Builder(LocalContext.current)
+                                    .data(imageUrl)
+                                    .crossfade(true)
+                                    .build(),
                                 contentDescription = category.name,
                                 modifier = Modifier.size(92.dp),
-                                contentScale = ContentScale.Fit
+                                contentScale = ContentScale.Fit,
+                                loading = {
+                                    Box(
+                                        modifier = Modifier.size(92.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(26.dp),
+                                            strokeWidth = 2.5.dp
+                                        )
+                                    }
+                                },
+                                error = {
+                                    // fallback iniciales si falla la URL
+                                    Text(
+                                        text = category.name.take(1).uppercase(),
+                                        color = Color.Gray,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp
+                                    )
+                                }
                             )
                         }
+
                         category.imageRes != 0 -> {
                             Image(
                                 painter = painterResource(id = category.imageRes),
@@ -211,6 +240,7 @@ fun CircularCategoryCard(
                                 contentScale = ContentScale.Fit
                             )
                         }
+
                         else -> {
                             // fallback iniciales
                             Text(

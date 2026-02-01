@@ -15,9 +15,9 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
-import com.example.mordisko.core.navigation.Routes
+import androidx.compose.ui.draw.alpha
 
 enum class PaymentMethod {
     PagoMovil, Efectivo, PuntoDeVenta
@@ -33,6 +33,15 @@ fun PaymentMethodScreen(
     val coroutineScope = rememberCoroutineScope()
     val orange = Color(0xFFE05B13)
     val lightOrange = Color(0xFFFFA726)
+    val deliveryOption by cartViewModel.deliveryOption.collectAsState()
+    val onlyPagoMovil = deliveryOption == DeliveryOption.Moto
+
+    LaunchedEffect(onlyPagoMovil) {
+        if (onlyPagoMovil) {
+            selectedMethod = PaymentMethod.PagoMovil
+            cartViewModel.setPaymentMethod(PaymentMethod.PagoMovil)
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -69,10 +78,21 @@ fun PaymentMethodScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            if (onlyPagoMovil) {
+                Text(
+                    text = "Para entrega en moto, solo está disponible Pago Móvil.",
+                    color = orange,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+            }
+
             PaymentOptionCard(
                 icon = Icons.Default.PhoneIphone,
                 title = "Pago Móvil",
                 isSelected = selectedMethod == PaymentMethod.PagoMovil,
+                enabled = true,
                 onClick = { selectedMethod = PaymentMethod.PagoMovil },
                 highlightColor = lightOrange
             )
@@ -83,6 +103,7 @@ fun PaymentMethodScreen(
                 icon = Icons.Default.CreditCard,
                 title = "Punto de Venta",
                 isSelected = selectedMethod == PaymentMethod.PuntoDeVenta,
+                enabled = !onlyPagoMovil,
                 onClick = { selectedMethod = PaymentMethod.PuntoDeVenta },
                 highlightColor = lightOrange
             )
@@ -93,6 +114,7 @@ fun PaymentMethodScreen(
                 icon = Icons.Default.Money,
                 title = "Efectivo",
                 isSelected = selectedMethod == PaymentMethod.Efectivo,
+                enabled = !onlyPagoMovil,
                 onClick = { selectedMethod = PaymentMethod.Efectivo },
                 highlightColor = lightOrange
             )
@@ -132,13 +154,16 @@ fun PaymentOptionCard(
     icon: ImageVector,
     title: String,
     isSelected: Boolean,
+    enabled: Boolean = true,
     onClick: () -> Unit,
     highlightColor: Color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
 ) {
+    val alpha = if (enabled) 1f else 0.45f
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onClick() },
+            .clickable(enabled = enabled) { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) highlightColor else Color.White
         ),
@@ -147,7 +172,9 @@ fun PaymentOptionCard(
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .alpha(alpha)
         ) {
             Icon(icon, contentDescription = title, tint = Color(0xFFE05B13))
             Spacer(modifier = Modifier.width(12.dp))

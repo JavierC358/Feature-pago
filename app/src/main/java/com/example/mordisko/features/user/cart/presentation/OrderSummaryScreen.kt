@@ -21,6 +21,8 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
+import androidx.compose.runtime.saveable.rememberSaveable
+import java.util.UUID
 import com.example.mordisko.features.user.delivery.presentation.viewmodel.DeliveryOption
 
 @Composable
@@ -37,6 +39,7 @@ fun OrderSummaryScreen(
     val paymentMethod by cartViewModel.paymentMethod.collectAsState()
     val exchangeRate by cartViewModel.exchangeRate.collectAsState()
     val deliveryCostUsd by cartViewModel.deliveryCost.collectAsState()
+    val isPlacingOrder by cartViewModel.isPlacingOrder.collectAsState()
 
     val orange = Color(0xFFE05B13)
     val lightOrange = Color(0xFFFFA726)
@@ -165,14 +168,28 @@ fun OrderSummaryScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
+// requestId por intento de checkout (luego lo haremos real en Firestore)
+        val requestId = rememberSaveable { UUID.randomUUID().toString() }
+
+// Anti doble navegación
+        var hasNavigated by rememberSaveable { mutableStateOf(false) }
+
         Button(
             onClick = {
+                if (isPlacingOrder) return@Button
+
                 cartViewModel.placeOrder(
                     exchangeRate = exchangeRate,
                     deliveryCostUsd = deliveryCostUsd,
                     clearCartOnSuccess = true,
+                    requestId = requestId, // ✅ CLAVE: idempotencia real
                     onResult = { success, error, orderNumber ->
                         if (success && orderNumber != null) {
+
+                            // ✅ Evita doble navegación si llega doble callback
+                            if (hasNavigated) return@placeOrder
+                            hasNavigated = true
+
                             val encodedOrder = URLEncoder.encode(orderNumber, StandardCharsets.UTF_8.toString())
                             when (paymentMethod) {
                                 PaymentMethod.PagoMovil -> {
@@ -182,6 +199,7 @@ fun OrderSummaryScreen(
                                     navController.navigate("pedido_en_proceso/$encodedOrder")
                                 }
                                 else -> {
+                                    hasNavigated = false
                                     Toast.makeText(context, "Método de pago no válido", Toast.LENGTH_LONG).show()
                                 }
                             }
@@ -191,13 +209,19 @@ fun OrderSummaryScreen(
                     }
                 )
             },
+            enabled = !isPlacingOrder,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(48.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(containerColor = orange)
         ) {
-            Text("Confirmar", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(
+                text = if (isPlacingOrder) "Enviando..." else "Confirmar",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
     }
 }

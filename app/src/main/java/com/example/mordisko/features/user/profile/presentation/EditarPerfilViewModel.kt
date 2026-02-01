@@ -66,15 +66,14 @@ class EditarPerfilViewModel @Inject constructor(
             _isSaving.value = true
             _errorMessage.value = null
 
-            // 🔹 Nos aseguramos de que el UserProfile incluya la foto si fue seleccionada
-            val profileToSave = if (_imageUri.value != null) {
-                _profile.value.copy(photoUrl = _imageUri.value.toString())
-            } else {
-                _profile.value
-            }
+            val result = userRepository.saveUserProfile(
+                profile = _profile.value,
+                imageUri = _imageUri.value
+            )
 
-            val result = userRepository.saveUserProfile(profileToSave, _imageUri.value)
-            result.onSuccess {
+            result.onSuccess { updatedProfile ->
+                _profile.value = updatedProfile        // ✅ ya trae photoUrl de Storage
+                _imageUri.value = null                 // ✅ opcional: limpiamos selección local
                 onSuccess()
             }.onFailure {
                 _errorMessage.value = it.message
