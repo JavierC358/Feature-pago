@@ -88,6 +88,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
 import java.util.Date
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun AppNavigation(
@@ -241,14 +242,23 @@ fun AppNavigation(
             composable(Routes.EditarPerfil) {
                 val viewModel: EditarPerfilViewModel = hiltViewModel() // 👈 Aquí sí es válido
                 val context = LocalContext.current
-
                 val launcher = rememberLauncherForActivityResult(
                     contract = ActivityResultContracts.GetContent()
                 ) { uri: Uri? ->
                     uri?.let { selectedUri ->
+                        try {
+                            context.contentResolver.takePersistableUriPermission(
+                                selectedUri,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+
                         viewModel.onImageSelected(selectedUri)
                     }
                 }
+
 
                 EditarPerfilScreen(
                     onBack = { navController.popBackStack() },

@@ -21,23 +21,19 @@ class UserRepositoryImpl @Inject constructor(
             val uid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuario no autenticado"))
 
-            // ✅ Foto existente (respaldo) para NO borrarla
+            // Foto existente como respaldo (por si NO seleccionan una nueva)
             val currentDoc = firestore.collection("profile").document(uid).get().await()
             val existingPhotoUrl = currentDoc.getString("photoUrl").orEmpty()
 
-            // ✅ Subir nueva si hay, si no conservar la que exista
-            val finalPhotoUrl = try {
-                imageUri?.let {
-                    val imageRef = storage.reference.child("profile_pictures/$uid/profile.jpg")
-                    imageRef.putFile(it).await()
-                    imageRef.downloadUrl.await().toString()
-                } ?: when {
-                    profile.photoUrl.isNotBlank() -> profile.photoUrl
-                    else -> existingPhotoUrl
-                }
-            } catch (_: Exception) {
+            val finalPhotoUrl = if (imageUri != null) {
+                // ✅ Si hay imagen nueva, DEBE subirse a Storage sí o sí
+                val imageRef = storage.reference.child("profile_pictures/$uid/profile.jpg")
+                imageRef.putFile(imageUri).await()
+                imageRef.downloadUrl.await().toString()
+            } else {
+                // ✅ Si NO hay imagen nueva, conservamos la anterior (o la que ya traiga el profile si es válida)
                 when {
-                    profile.photoUrl.isNotBlank() -> profile.photoUrl
+                    profile.photoUrl.isNotBlank() && !profile.photoUrl.startsWith("content://") -> profile.photoUrl
                     else -> existingPhotoUrl
                 }
             }
@@ -50,6 +46,7 @@ class UserRepositoryImpl @Inject constructor(
                 .await()
 
             Result.success(profileToSave)
+
         } catch (e: Exception) {
             Result.failure(e)
         }
