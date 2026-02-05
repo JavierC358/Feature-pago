@@ -166,4 +166,22 @@ class OrderRepository @Inject constructor(
             Result.failure(e)
         }
     }
+
+    suspend fun cancelOrder(orderNumber: String): Result<Unit> {
+        return try {
+            val orderRef = ordersCollection.document(orderNumber)
+
+            val updates = mapOf(
+                "orderStatus" to "cancelado",
+                "paymentStatus" to "cancelado",
+                "cancelledAt" to FieldValue.serverTimestamp(),
+                "cancelledBy" to "cliente"
+            )
+
+            orderRef.update(updates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -44,4 +44,25 @@ class OrderStatusViewModel @Inject constructor(
             }
         }
     }
+
+    fun cancelOrder(orderNumber: String, onDone: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                firestore.collection("orders")
+                    .document(orderNumber)
+                    .update(
+                        mapOf(
+                            "orderStatus" to "cancelado",
+                            "paymentStatus" to "cancelado",
+                            "cancelledBy" to "cliente",
+                            "cancelledAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                        )
+                    )
+                    .addOnSuccessListener { onDone(true) }
+                    .addOnFailureListener { onDone(false) }
+            } catch (_: Exception) {
+                onDone(false)
+            }
+        }
+    }
 }

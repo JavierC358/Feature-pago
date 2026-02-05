@@ -252,7 +252,13 @@ fun OrderStatusScreen(
             Spacer(modifier = Modifier.height(12.dp))
 
             OutlinedButton(
-                onClick = onCancelar,
+                onClick = {
+                    viewModel.cancelOrder(orderNumber) { success ->
+                        if (success) {
+                            onCancelar() // navega a Home
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),

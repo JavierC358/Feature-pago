@@ -18,6 +18,14 @@ import com.example.mordisko.features.admin.presentation.viewmodel.AdminViewModel
 import com.example.mordisko.features.admin.presentation.viewmodel.OrdersFilter
 import com.example.mordisko.ui.theme.lightOrange
 import com.example.mordisko.ui.theme.orange
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextDecoration
+import kotlinx.coroutines.launch
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -26,6 +34,9 @@ fun AdminVerificacionesScreen(
     viewModel: AdminViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val clipboardManager = LocalClipboardManager.current
 
     LaunchedEffect(Unit) {
         viewModel.loadVerificaciones() // carga página 1 con pageSize actual
@@ -43,8 +54,11 @@ fun AdminVerificacionesScreen(
                     }) { Icon(Icons.Default.ArrowBack, contentDescription = "Volver", tint = orange) }
                 }
             )
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState)
         }
-    ) { padding ->
+    ){ padding ->
         Column(
             modifier = Modifier
                 .padding(padding)
@@ -88,8 +102,54 @@ fun AdminVerificacionesScreen(
                                 Text("Monto (Total): Bs $totalTexto")
                                 Text("Pagó (Pago móvil): Bs $pagoTexto")
                                 Text("Ref: ${order.referenceLast4}")
-                                Text("Tel: ${order.phoneNumber}")
-                                Text("Estado: ${order.status}")
+                                val phoneRaw = order.phoneNumber?.trim().orEmpty()
+                                val phone = phoneRaw.replace(" ", "")
+                                val phoneDisponible = phone.isNotBlank() && phone != "--"
+
+                                Row {
+                                    Text("Tel: ")
+                                    Text(
+                                        text = if (phoneDisponible) phone else "--",
+                                        modifier = if (phoneDisponible) {
+                                            Modifier.clickable {
+                                                clipboardManager.setText(AnnotatedString(phone))
+                                                scope.launch {
+                                                    snackbarHostState.showSnackbar("Copiado: $phone")
+                                                }
+                                            }
+                                        } else {
+                                            Modifier
+                                        },
+                                        color = if (phoneDisponible) orange else LocalContentColor.current,
+                                        textDecoration = if (phoneDisponible) TextDecoration.Underline else null
+                                    )
+                                }
+                                val estadoMostrado = if (order.orderStatus.trim().lowercase() == "completado") {
+                                    "completado"
+                                } else {
+                                    order.status
+                                }
+
+                                Text("Estado: $estadoMostrado")
+
+                                // ✅ NUEVO: estado de despacho (para que el admin vea si ya está despachada)
+                                val despacho = order.orderStatus.lowercase()
+
+                                val despachoTexto = when (despacho) {
+                                    "completado" -> "Despacho: ✅ Completado"
+                                    "cancelado" -> "Despacho: ❌ Cancelado"
+                                    else -> "Despacho: ⏳ Pendiente"
+                                }
+
+                                Text(
+                                    text = despachoTexto,
+                                    color = when (despacho) {
+                                        "completado" -> orange
+                                        "cancelado" -> Color.Red
+                                        else -> LocalContentColor.current
+                                    }
+                                )
+
                                 Spacer(modifier = Modifier.height(8.dp))
 
                                 Row(
@@ -97,21 +157,37 @@ fun AdminVerificacionesScreen(
                                     modifier = Modifier.fillMaxWidth()
                                 ) {
                                     Button(
-                                        onClick = {
-                                            navController.navigate("order_detail/${order.orderNumber}")
-                                        },
+                                        onClick = { navController.navigate("order_detail/${order.orderNumber}") },
                                         modifier = Modifier.weight(1f),
                                         colors = ButtonDefaults.buttonColors(containerColor = orange)
                                     ) { Text("Ver Detalles") }
 
-                                    if (state.filter == OrdersFilter.POR_VERIFICAR &&
-                                        order.status.lowercase() != "verificado"
+                                    // ✅ Tu botón actual: solo para pago móvil por verificar
+                                    val esPagoMovil = order.amountPaid != null || order.referenceLast4 != "--" || order.phoneNumber != "--"
+
+                                    if (
+                                        state.filter == OrdersFilter.POR_VERIFICAR &&
+                                        order.status.lowercase() != "verificado" &&
+                                        esPagoMovil
                                     ) {
                                         Button(
                                             onClick = { viewModel.marcarComoVerificada(order.orderNumber) },
                                             modifier = Modifier.weight(1f),
                                             colors = ButtonDefaults.buttonColors(containerColor = orange)
                                         ) { Text("Marcar como verificada") }
+                                    }
+                                }
+
+                                // ✅ NUEVO: botón COMPLETAR (para efectivo / punto / y también móviles ya despachados)
+                                // Lo mostramos solo si aún NO está completado
+                                if (despacho != "completado" && despacho != "cancelado") {
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    Button(
+                                        onClick = { viewModel.completarOrden(order.orderNumber) },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        colors = ButtonDefaults.buttonColors(containerColor = orange)
+                                    ) {
+                                        Text("Completar (Despachada)")
                                     }
                                 }
                             }

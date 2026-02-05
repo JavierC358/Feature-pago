@@ -141,6 +141,25 @@ class AdminViewModel @Inject constructor(
         }
     }
 
+    fun completarOrden(orderNumber: String) {
+        viewModelScope.launch {
+            try {
+                val orderRef = firestore.collection("orders").document(orderNumber)
+
+                orderRef.update(
+                    mapOf(
+                        "orderStatus" to "completado",
+                        "completedAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    )
+                ).await()
+
+                loadPage(state.value.currentPage) // refresca sin romper paginación
+            } catch (e: Exception) {
+                Log.e("AdminViewModel", "Error completando orden", e)
+            }
+        }
+    }
+
     /** --- Tasa de cambio (sin cambios) --- */
 
     fun loadExchangeRate() {
@@ -236,8 +255,10 @@ class AdminViewModel @Inject constructor(
         return try {
             val base = firestore.collection("orders")
             val query = when (state.value.filter) {
-                OrdersFilter.POR_VERIFICAR -> base.whereEqualTo("paymentStatus", "por_verificar")
-                OrdersFilter.TODAS         -> base
+                OrdersFilter.POR_VERIFICAR ->
+                    base.whereIn("paymentStatus", listOf("por_verificar", "pendiente"))
+                OrdersFilter.TODAS ->
+                    base
             }
             query.count().get(AggregateSource.SERVER).await().count
         } catch (e: Exception) {
@@ -253,7 +274,7 @@ class AdminViewModel @Inject constructor(
         var q: Query = firestore.collection("orders")
 
         if (state.value.filter == OrdersFilter.POR_VERIFICAR) {
-            q = q.whereEqualTo("paymentStatus", "por_verificar")
+            q = q.whereIn("paymentStatus", listOf("por_verificar", "pendiente"))
         }
 
         q = q.orderBy("timestamp", Query.Direction.DESCENDING).limit(pageSize)
@@ -270,6 +291,9 @@ class AdminViewModel @Inject constructor(
 
             // ✅ Total SIEMPRE desde orders
             val totalBs = order.getDouble("totalBs")
+
+            val paymentMethod = order.getString("paymentMethod") ?: ""
+            val orderStatus = order.getString("orderStatus") ?: "pendiente"
 
             val pagoDoc = firestore.collection("orders")
                 .document(orderId)
@@ -295,7 +319,8 @@ class AdminViewModel @Inject constructor(
                     amountPaid = amountPaid,
                     referenceLast4 = referenceLast4,
                     phoneNumber = phoneNumber,
-                    status = status
+                    status = status,
+                    orderStatus = orderStatus
                 )
             )
         }
@@ -330,9 +355,10 @@ data class AdminVerificacionesState(
 
 data class VerificacionPago(
     val orderNumber: String,
-    val totalBs: Double?,     // ✅ total de la orden
-    val amountPaid: Double?,  // ✅ lo que pagó por pago móvil (si existe)
+    val totalBs: Double?,
+    val amountPaid: Double?,
     val referenceLast4: String,
     val phoneNumber: String,
-    val status: String
+    val status: String,
+    val orderStatus: String = "pendiente" // ✅ NUEVO (con default para no romper)
 )

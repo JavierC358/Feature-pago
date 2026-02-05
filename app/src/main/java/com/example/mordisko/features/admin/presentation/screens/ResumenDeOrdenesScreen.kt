@@ -60,8 +60,8 @@ fun ResumenDeOrdenesScreen(
             .await()
 
         val lista = snapshot.documents.mapNotNull { doc ->
-            val paymentStatus = doc.getString("paymentStatus") ?: return@mapNotNull null
-            if (paymentStatus != "verificado") return@mapNotNull null
+            val orderStatus = doc.getString("orderStatus") ?: "pendiente"
+            if (orderStatus != "completado") return@mapNotNull null
 
             val orderNumber = doc.getString("orderNumber") ?: return@mapNotNull null
             val timestamp = doc.getTimestamp("timestamp")?.toDate() ?: return@mapNotNull null
