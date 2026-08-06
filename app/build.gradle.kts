@@ -9,6 +9,12 @@ plugins {
     alias(libs.plugins.firebaseCrashlytics)
 }
 
+configurations.configureEach {
+    resolutionStrategy {
+        force("androidx.graphics:graphics-path:1.1.0-beta01")
+    }
+}
+
 android {
     namespace = "com.example.mordisko"
     compileSdk = 35
@@ -21,8 +27,8 @@ android {
         minSdk = 24
         targetSdk = 35
 
-        versionCode = 12
-        versionName = "1.0.10"
+        versionCode = 22
+        versionName = "1.0.20"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -71,8 +77,12 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs {
+            excludes += setOf("**/libandroidx.graphics.path.so")
+        }
     }
 }
+
 
 dependencies {
     // -------------------------
@@ -167,6 +177,9 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.androidx.compose.material.icons.extended)
+
+    implementation(libs.androidx.graphics.path)
+
 }
 
 kapt {
