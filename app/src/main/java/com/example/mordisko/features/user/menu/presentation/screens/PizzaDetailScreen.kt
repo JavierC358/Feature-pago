@@ -248,10 +248,10 @@ fun PizzaDetailScreen(
                             )
 
                             val sizeInCm = when (size) {
-                                "EG" -> "42 cm"
+                                "EG" -> "40 cm"
                                 "Gde" -> "36  cm"
                                 "Med" -> "32 cm"
-                                "Peq" -> "22 cm"
+                                "Peq" -> "25 cm"
                                 else -> ""
                             }
                             if (sizeInCm.isNotEmpty()) {

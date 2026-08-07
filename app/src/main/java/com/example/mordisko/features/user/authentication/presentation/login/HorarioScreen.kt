@@ -184,9 +184,9 @@ fun HorarioScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 listOf(
-                    "Martes a Viernes:" to "11:00 AM - 09:00 PM",
-                    "Sábado:" to "10:00 AM - 09:00 PM",
-                    "Domingo:" to "09:00 AM - 06:00 PM"
+                    "Miercoles a Viernes:" to "11:30 AM - 09:00 PM",
+                    "Sábado:" to "11:00 AM - 09:00 PM",
+                    "Domingo:" to "10:30 AM - 06:00 PM"
                 ).forEach { (dia, hora) ->
                     Card(
                         modifier = Modifier.fillMaxWidth(),
